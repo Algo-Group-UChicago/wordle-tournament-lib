@@ -10,12 +10,14 @@ class WordleHint:
         assert len(word) == 5, "Word must be 5 letters long"
         assert len(word) == len(hints), "Word and hints must have the same length"
         
-        self.results = [(word[i], hints[i]) for i in range(5)]
+        self.word = word
+        self.hints = hints
+        self.word_hint_pairs = [(word[i], hints[i]) for i in range(5)]
 
     def visualize_hint(self):
         letters = []
         squares = []
-        for letter, hint in self.results:
+        for letter, hint in self.word_hint_pairs:
             letters.append(letter.upper())
             if hint == HINT_TYPE.CORRECT:
                 squares.append('🟩')
