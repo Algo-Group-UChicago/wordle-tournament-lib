@@ -107,11 +107,12 @@ maturin build --interpreter python3.9
 
 ```
 wordle-tournament-lib/
-├── Cargo.toml          # Rust package configuration
-├── pyproject.toml      # Python package configuration
+├── Cargo.toml                    # Rust package configuration
+├── pyproject.toml                # Python package configuration
+├── wordle_tournament_lib.pyi     # Type stubs for IDE support
 ├── src/
-│   ├── lib.rs         # Main library entry point (PyO3 module)
-│   └── hint.rs        # Hint types and WordleHint implementation
+│   ├── lib.rs                   # Main library entry point (PyO3 module)
+│   └── hint.rs                  # Hint types and WordleHint implementation
 └── README.md
 ```
 
