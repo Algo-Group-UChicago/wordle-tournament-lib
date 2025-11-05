@@ -106,7 +106,7 @@ class UChicagoWordleBotBase:
         Initialize a new Wordle bot.
 
         Args:
-            team_id: Unique identifier for your team (UUID recommended)
+            team_id: Unique identifier for your team
         """
         ...
 
