@@ -42,16 +42,16 @@ After installing with `maturin develop`, you can test it in Python:
 ```python
 from wordle_tournament_lib import WordleHint
 
-# Create a WordleHint instance with simple strings
-# 'W' = correct position (green)
-# '*' = present but wrong position (yellow)
-# 'L' = absent (gray)
-hint = WordleHint("hello", ["W", "*", "L", "L", "*"])
+# Create a WordleHint instance with a hint string
+# 'O' = correct position (green)
+# '~' = present but wrong position (yellow)
+# 'X' = absent (gray)
+hint = WordleHint("hello", "O~XX~")
 
 # Access properties
 print(hint.word)  # "hello"
-print(hint.hints)  # ['W', '*', 'L', 'L', '*']
-print(hint.word_hint_pairs)  # [('h', 'W'), ('e', '*'), ('l', 'L'), ('l', 'L'), ('o', '*')]
+print(hint.hints)  # ['O', '~', 'X', 'X', '~']
+print(hint.word_hint_pairs)  # [('h', 'O'), ('e', '~'), ('l', 'X'), ('l', 'X'), ('o', '~')]
 
 # Visualize (prints to stdout, like the original Python version)
 hint.visualize_hint()
@@ -60,13 +60,13 @@ hint.visualize_hint()
 # 🟩 🟨 ⬜ ⬜ 🟨
 
 # String representation
-print(repr(hint))  # WordleHint(word='hello', hints=['W', '*', 'L', 'L', '*'])
+print(repr(hint))  # WordleHint(word='hello', hints=['O', '~', 'X', 'X', '~'])
 ```
 
 The library uses a simple string-based API for Python users:
-- **'W'** - Correct letter in correct position (🟩 green)
-- **'*'** - Letter is present but in wrong position (🟨 yellow)
-- **'L'** - Letter is absent from the word (⬜ gray)
+- **'O'** - Correct letter in correct position (🟩 green)
+- **'~'** - Letter is present but in wrong position (🟨 yellow)
+- **'X'** - Letter is absent from the word (⬜ gray)
 
 ## Building Distribution Packages
 
@@ -147,7 +147,7 @@ When adding new Rust modules to the library:
 ### Internal vs External Types
 
 - **In Rust**: `HintType` is a type-safe enum used internally for performance and correctness
-- **In Python**: Users work with simple strings ('W', '*', 'L') for ease of use
+- **In Python**: Users work with simple strings ('O', '~', 'X') for ease of use
 - **Conversion**: PyO3 automatically converts between Rust types and Python types via the `#[getter]` methods
 
 This gives you the best of both worlds:
