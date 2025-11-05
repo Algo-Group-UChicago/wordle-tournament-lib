@@ -78,3 +78,60 @@ class WordleHint:
         """Return string representation of WordleHint."""
         ...
 
+
+class UChicagoWordleBotBase:
+    """
+    Base class for UChicago Wordle Tournament bots.
+
+    This class provides the infrastructure for running wordle bots in the tournament.
+    Subclass this and implement the `guess()` method to create your bot.
+
+    Example:
+        >>> class MyBot(UChicagoWordleBotBase):
+        ...     def __init__(self, team_id: str):
+        ...         pass
+        ...
+        ...     def guess(self, hints: List[WordleHint]) -> str:
+        ...         # Your guessing logic here
+        ...         return "crane"
+        >>>
+        >>> bot = MyBot("team-uuid")
+    """
+
+    team_id: str
+    """Unique identifier for the team."""
+
+    def __init__(self, team_id: str) -> None:
+        """
+        Initialize a new Wordle bot.
+
+        Args:
+            team_id: Unique identifier for your team (UUID recommended)
+        """
+        ...
+
+    def guess(self, hints: List[WordleHint]) -> str:
+        """
+        Make a guess based on previous hints.
+
+        This is an abstract method that must be overridden by subclasses.
+
+        Args:
+            hints: List of previous guesses and their corresponding hints.
+                   Empty list on first guess.
+
+        Returns:
+            A 5-letter word guess
+
+        Raises:
+            NotImplementedError: If not overridden in subclass
+
+        Example:
+            >>> def guess(self, hints: List[WordleHint]) -> str:
+            ...     if not hints:
+            ...         return "crane"  # First guess
+            ...     # Analyze hints and return next guess
+            ...     return "stare"
+        """
+        ...
+
