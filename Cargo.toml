@@ -8,5 +8,5 @@ name = "wordle_tournament_lib"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
+pyo3 = { version = "0.26", features = ["extension-module"] }
 
