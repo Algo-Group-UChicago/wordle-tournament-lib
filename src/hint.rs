@@ -50,9 +50,10 @@ impl WordleHint {
             ));
         }
         
-        let hint_types: Vec<HintType> = hints.chars()
-        .map(|c|  HintType::from_char(c))
-        .collect();
+        let hint_types: Vec<HintType> = hints
+            .chars()
+            .map(HintType::from_char)
+            .collect();
         
         Ok(WordleHint {
             word,

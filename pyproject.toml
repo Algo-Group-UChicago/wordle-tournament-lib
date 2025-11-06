@@ -15,3 +15,7 @@ classifiers = [
 [project.readme]
 file = "README.md"
 
+[tool.maturin]
+python-source = "."
+include = ["wordle_tournament_lib.pyi"]
+
