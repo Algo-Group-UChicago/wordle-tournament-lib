@@ -68,8 +68,8 @@ impl WordleHint {
     }
 
     #[getter]
-    fn hints(&self) -> Vec<String> {
-        self.hints.iter().map(|h| h.to_char().to_string()).collect()
+    fn hints(&self) -> Vec<char> {
+        self.hints.iter().map(|h| h.to_char()).collect()
     }
 
     fn visualize_hint(&self) -> PyResult<()> {

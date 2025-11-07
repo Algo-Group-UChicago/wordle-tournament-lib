@@ -79,7 +79,7 @@ impl UChicagoWordleBotBase {
     fn submit_guesses_to_server(
         &self,
         _team_id: &str,
-        guesses: &Vec<String>,
+        guesses: &[String],
     ) -> Result<Vec<WordleHint>, PyErr> {
         // todo!("Implemenet sending logic")
 
