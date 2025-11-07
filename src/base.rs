@@ -1,8 +1,10 @@
 use pyo3::prelude::*;
 use pyo3::exceptions::PyNotImplementedError;
-use pyo3::types::{PyList, PyTuple, PyDict};
+use pyo3::types::{PyList};
 use pyo3::Bound;
 use crate::hint::WordleHint;
+
+const NUM_TARGET_WORDS: usize = 1000;
 
 
 #[pyclass(subclass)]
@@ -25,12 +27,34 @@ impl UChicagoWordleBotBase {
 
     pub fn evaluate(slf: Bound<'_, Self>) -> PyResult<()> {
         let py = slf.py();
-        let hints = PyList::empty(py);
-        let guess_result: String = slf.call_method1("guess", (hints,))?.extract()?;
+        let team_id: &str = &slf.borrow().team_id;
+        
+        // Each element of this vector is a guess history per target word that we grow via calling 
+        //   user's guess() method and sending guesses to backend to recieve hints.
+        let hint_map: Vec<Bound<PyList>> = (0..NUM_TARGET_WORDS)
+            .map(|_| PyList::empty(py))
+            .collect();
 
-        let team_id = slf.borrow().team_id.clone();
+        for _ in 0..20 {
+            let mut guesses = vec![];
+            for hint_list in hint_map.iter() {
+                let guess: String = slf.call_method1("guess", (hint_list,))?.extract()?;
+                if guess.len() != 5 {
+                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                        "Guess must be 5 letters long", // TODO: implement actual guess validation against corpus
+                    ));
+                }
+                guesses.push(guess);
+            }
+            
+            let new_hints = slf.borrow().submit_guesses_to_server(team_id, &guesses)?;
+            for (i, hint_list) in hint_map.iter().enumerate() {
+                let hint = Py::new(py, new_hints[i].clone())?;
+                hint_list.append(hint)?;
+            }
+        }
 
-        println!("Team {} Got guess: {}", team_id, guess_result);
+        println!("Team {} eval completed", team_id);
         Ok(())
     }
 
@@ -42,7 +66,15 @@ impl UChicagoWordleBotBase {
 }
 
 impl UChicagoWordleBotBase {
-    fn send(&self) {
-        todo!("Implemenet sending logic")
+    fn submit_guesses_to_server(&self, _team_id: &str, guesses: &Vec<String>) -> Result<Vec<WordleHint>, PyErr> {
+        // todo!("Implemenet sending logic")
+
+        // for now I'm gonna return dumb grading - otherwise we'd be balling w oneshot server call
+        let mut hints = vec![];
+        for guess in guesses {
+            hints.push(WordleHint::new_hint(guess.clone(), "OOOOO".to_string())?);
+        }
+        assert_eq!(hints.len(), guesses.len()); // turn this into an error check once server logic is implemented
+        Ok(hints)
     }
 }

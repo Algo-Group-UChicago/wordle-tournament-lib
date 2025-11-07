@@ -19,7 +19,7 @@ impl HintType {
         }
     }
 
-    fn to_char(&self) -> char {
+    fn to_char(self) -> char {
         match self {
             HintType::Correct => 'O',
             HintType::Present => '~',
@@ -29,6 +29,7 @@ impl HintType {
 }
 
 #[pyclass]
+#[derive(Clone)]
 pub struct WordleHint {
     #[pyo3(get)]
     word: String,
@@ -38,7 +39,7 @@ pub struct WordleHint {
 #[pymethods]
 impl WordleHint {
     #[new]
-    fn new(word: String, hints: String) -> PyResult<Self> {
+    pub fn new_hint(word: String, hints: String) -> PyResult<Self> {
         if word.len() != 5 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
                 "Word must be 5 letters long",
