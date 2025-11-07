@@ -24,6 +24,9 @@ impl UChicagoWordleBotBase {
         let py = slf.py();
         let team_id: &str = &slf.borrow().team_id;
 
+        // send start signal to server
+        slf.borrow().send_start_signal_to_server(team_id)?;
+
         // Each element of this vector is a guess history per target word that we grow via calling
         //   user's guess() method and sending guesses to backend to recieve hints.
         let hint_map: Vec<Bound<PyList>> =
@@ -58,6 +61,9 @@ impl UChicagoWordleBotBase {
             }
         }
 
+        // send end signal to server
+        slf.borrow().send_end_signal_to_server(team_id)?;
+
         println!("Team {} eval completed", team_id);
         Ok(())
     }
@@ -90,5 +96,17 @@ impl UChicagoWordleBotBase {
 
         assert_eq!(hints.len(), guesses.len()); // turn this into an error check once server logic is implemented
         Ok(hints) // we want to still return Ok(hints) later, but the block above this will instead be [formatting -> API call -> parsing]
+    }
+
+    fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
+        // todo!("Implement sending start signal to server")
+        // this will probably start some kind of timer
+        Ok(())
+    }
+
+    fn send_end_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
+        // todo!("Implement sending end signal to server")
+        // this will probably end some kind of timer, record the user's final score, shuffle the user's answer key for the next run etc.
+        Ok(())
     }
 }
