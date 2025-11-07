@@ -34,7 +34,8 @@ impl UChicagoWordleBotBase {
             for hint_list in hint_map.iter() {
                 // Skip calling guess() if they've already guessed the word
                 if hint_list.len() > 0 {
-                    let last_hint: Bound<WordleHint> = hint_list.get_item(hint_list.len() - 1)?.extract()?;
+                    let last_hint: Bound<WordleHint> =
+                        hint_list.get_item(hint_list.len() - 1)?.extract()?;
                     if last_hint.borrow().is_fully_correct() {
                         guesses.push(DUMMY_GUESS.to_string());
                         continue;
