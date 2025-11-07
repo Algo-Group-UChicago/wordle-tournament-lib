@@ -1,11 +1,10 @@
-use pyo3::prelude::*;
-use pyo3::exceptions::PyNotImplementedError;
-use pyo3::types::{PyList};
-use pyo3::Bound;
 use crate::hint::WordleHint;
+use pyo3::exceptions::PyNotImplementedError;
+use pyo3::prelude::*;
+use pyo3::types::PyList;
+use pyo3::Bound;
 
 const NUM_TARGET_WORDS: usize = 1000;
-
 
 #[pyclass(subclass)]
 pub struct UChicagoWordleBotBase {
@@ -13,27 +12,21 @@ pub struct UChicagoWordleBotBase {
     team_id: String,
 }
 
-
 #[pymethods]
 impl UChicagoWordleBotBase {
     #[new]
-    pub fn new(
-        team_id: String,
-    ) -> Self {
-        UChicagoWordleBotBase {
-            team_id,
-        }
+    pub fn new(team_id: String) -> Self {
+        UChicagoWordleBotBase { team_id }
     }
 
     pub fn evaluate(slf: Bound<'_, Self>) -> PyResult<()> {
         let py = slf.py();
         let team_id: &str = &slf.borrow().team_id;
-        
-        // Each element of this vector is a guess history per target word that we grow via calling 
+
+        // Each element of this vector is a guess history per target word that we grow via calling
         //   user's guess() method and sending guesses to backend to recieve hints.
-        let hint_map: Vec<Bound<PyList>> = (0..NUM_TARGET_WORDS)
-            .map(|_| PyList::empty(py))
-            .collect();
+        let hint_map: Vec<Bound<PyList>> =
+            (0..NUM_TARGET_WORDS).map(|_| PyList::empty(py)).collect();
 
         for _ in 0..20 {
             let mut guesses = vec![];
@@ -46,7 +39,7 @@ impl UChicagoWordleBotBase {
                 }
                 guesses.push(guess);
             }
-            
+
             let new_hints = slf.borrow().submit_guesses_to_server(team_id, &guesses)?;
             for (i, hint_list) in hint_map.iter().enumerate() {
                 let hint = Py::new(py, new_hints[i].clone())?;
@@ -60,13 +53,17 @@ impl UChicagoWordleBotBase {
 
     pub fn guess(&self, _py: Python, _hints: Vec<Py<WordleHint>>) -> PyResult<String> {
         Err(PyNotImplementedError::new_err(
-            "Subclass must implement the guess() method"
+            "Subclass must implement the guess() method",
         ))
     }
 }
 
 impl UChicagoWordleBotBase {
-    fn submit_guesses_to_server(&self, _team_id: &str, guesses: &Vec<String>) -> Result<Vec<WordleHint>, PyErr> {
+    fn submit_guesses_to_server(
+        &self,
+        _team_id: &str,
+        guesses: &Vec<String>,
+    ) -> Result<Vec<WordleHint>, PyErr> {
         // todo!("Implemenet sending logic")
 
         // for now I'm gonna return dumb grading - otherwise we'd be balling w oneshot server call

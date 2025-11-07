@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
-pub mod hint;
 mod base;
+pub mod hint;
 
 /// Python bindings for wordle-tournament-lib
 #[pymodule]

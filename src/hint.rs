@@ -15,7 +15,7 @@ impl HintType {
             'X' => HintType::Absent,
             _ => {
                 unreachable!("Invalid hint type: '{}'. Must be 'O' (correct), '~' (misplaced), or 'X' (absent)", value)
-            },
+            }
         }
     }
 
@@ -50,12 +50,9 @@ impl WordleHint {
                 "Word and hints must have the same length",
             ));
         }
-        
-        let hint_types: Vec<HintType> = hints
-            .chars()
-            .map(HintType::from_char)
-            .collect();
-        
+
+        let hint_types: Vec<HintType> = hints.chars().map(HintType::from_char).collect();
+
         Ok(WordleHint {
             word,
             hints: hint_types,
@@ -72,16 +69,13 @@ impl WordleHint {
 
     #[getter]
     fn hints(&self) -> Vec<String> {
-        self.hints
-            .iter()
-            .map(|h| h.to_char().to_string())
-            .collect()
+        self.hints.iter().map(|h| h.to_char().to_string()).collect()
     }
 
     fn visualize_hint(&self) -> PyResult<()> {
         let mut letters = Vec::new();
         let mut squares = Vec::new();
-        
+
         for (letter, hint_type) in self.word.chars().zip(self.hints.iter()) {
             letters.push(letter.to_uppercase().to_string());
             match hint_type {
@@ -90,15 +84,22 @@ impl WordleHint {
                 HintType::Absent => squares.push("⬜"),
             }
         }
-        
+
         let output = format!("{}\n{}", letters.join(" "), squares.join(" "));
         println!("{}", output);
         Ok(())
     }
 
     fn __repr__(&self) -> String {
-        let hint_chars: Vec<String> = self.hints.iter().map(|h| format!("'{}'", h.to_char())).collect();
-        format!("WordleHint(word='{}', hints=[{}])", self.word, hint_chars.join(", "))
+        let hint_chars: Vec<String> = self
+            .hints
+            .iter()
+            .map(|h| format!("'{}'", h.to_char()))
+            .collect();
+        format!(
+            "WordleHint(word='{}', hints=[{}])",
+            self.word,
+            hint_chars.join(", ")
+        )
     }
 }
-
