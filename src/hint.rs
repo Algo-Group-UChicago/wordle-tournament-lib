@@ -90,6 +90,10 @@ impl WordleHint {
         Ok(())
     }
 
+    pub fn is_fully_correct(&self) -> bool {
+        self.hints.iter().all(|h| *h == HintType::Correct)
+    }
+
     fn __repr__(&self) -> String {
         let hint_chars: Vec<String> = self
             .hints

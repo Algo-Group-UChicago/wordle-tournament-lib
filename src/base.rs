@@ -5,6 +5,7 @@ use pyo3::types::PyList;
 use pyo3::Bound;
 
 const NUM_TARGET_WORDS: usize = 1000;
+const DUMMY_GUESS: &str = "-----";
 
 #[pyclass(subclass)]
 pub struct UChicagoWordleBotBase {
@@ -31,6 +32,15 @@ impl UChicagoWordleBotBase {
         for _ in 0..20 {
             let mut guesses = vec![];
             for hint_list in hint_map.iter() {
+                // Skip calling guess() if they've already guessed the word
+                if hint_list.len() > 0 {
+                    let last_hint: Bound<WordleHint> = hint_list.get_item(hint_list.len() - 1)?.extract()?;
+                    if last_hint.borrow().is_fully_correct() {
+                        guesses.push(DUMMY_GUESS.to_string());
+                        continue;
+                    }
+                }
+
                 let guess: String = slf.call_method1("guess", (hint_list,))?.extract()?;
                 if guess.len() != 5 {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
@@ -69,7 +79,12 @@ impl UChicagoWordleBotBase {
         // for now I'm gonna return dumb grading - otherwise we'd be balling w oneshot server call
         let mut hints = vec![];
         for guess in guesses {
-            hints.push(WordleHint::new_hint(guess.clone(), "OOOOO".to_string())?);
+            // The most recent hint being "OOOOO" will signal the middleware to not call guess() and use DUMMY_GUESS instead
+            if guess == DUMMY_GUESS {
+                hints.push(WordleHint::new_hint(guess.clone(), "OOOOO".to_string())?);
+                continue;
+            }
+            hints.push(WordleHint::new_hint(guess.clone(), "XXXXX".to_string())?);
         }
 
         assert_eq!(hints.len(), guesses.len()); // turn this into an error check once server logic is implemented
