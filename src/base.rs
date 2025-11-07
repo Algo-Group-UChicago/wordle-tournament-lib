@@ -71,7 +71,8 @@ impl UChicagoWordleBotBase {
         for guess in guesses {
             hints.push(WordleHint::new_hint(guess.clone(), "OOOOO".to_string())?);
         }
+
         assert_eq!(hints.len(), guesses.len()); // turn this into an error check once server logic is implemented
-        Ok(hints)
+        Ok(hints) // we want to still return Ok(hints) later, but the block above this will instead be [formatting -> API call -> parsing]
     }
 }
