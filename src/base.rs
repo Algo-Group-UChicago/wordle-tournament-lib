@@ -1,3 +1,4 @@
+use crate::corpus::{get_corpus, is_valid_word};
 use crate::hint::WordleHint;
 use pyo3::exceptions::PyNotImplementedError;
 use pyo3::prelude::*;
@@ -5,7 +6,7 @@ use pyo3::types::PyList;
 use pyo3::Bound;
 
 const NUM_TARGET_WORDS: usize = 1000;
-const DUMMY_GUESS: &str = "-----";
+const DUMMY_GUESS: &str = "imagine guessing more than 5 letters";
 
 #[pyclass(subclass)]
 pub struct UChicagoWordleBotBase {
@@ -50,9 +51,9 @@ impl UChicagoWordleBotBase {
                 }
 
                 let guess: String = slf.call_method1("guess", (hint_list,))?.extract()?;
-                if guess.len() != 5 {
+                if !is_valid_word(&guess) {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                        "Guess must be 5 letters long", // TODO: implement actual guess validation against corpus
+                        format!("Guess {} is not a valid word - must be in corpus", guess),
                     ));
                 }
                 guesses.push(guess);
@@ -101,7 +102,7 @@ impl UChicagoWordleBotBase {
                     hint_list.get_item(hint_list.len() - 1)?.extract()?;
                 if !last_hint.borrow().is_fully_correct() {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                        format!("Team {} failed to guess some words", team_id)
+                        format!("Team {} failed to guess some words - we will error out", team_id)
                     ));
                 }
                 // find number of guesses it took for the given word
