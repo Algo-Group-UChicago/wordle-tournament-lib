@@ -43,7 +43,7 @@ class WordleHint:
     @property
     def hints(self) -> List[str]:
         """
-        Get the hint pattern as a list of strings.
+        Get the hint pattern as a list of single-character strings.
         
         Returns:
             List of hint characters: ['O', '~', 'X', ...]
@@ -71,6 +71,20 @@ class WordleHint:
         Example output:
             H E L L O
             🟩 🟨 ⬜ ⬜ 🟨
+        """
+        ...
+    
+    def is_fully_correct(self) -> bool:
+        """
+        Check if all hints indicate correct positions (all 'O's).
+        
+        Returns:
+            True if the guess was completely correct, False otherwise
+        
+        Example:
+            >>> hint = WordleHint("crane", "OOOOO")
+            >>> hint.is_fully_correct()
+            True
         """
         ...
     
@@ -107,6 +121,24 @@ class UChicagoWordleBotBase:
 
         Args:
             team_id: Unique identifier for your team
+        """
+        ...
+
+    def evaluate(self, grade_local: bool) -> None:
+        """
+        Run the tournament evaluation for this bot.
+
+        This method will call your `guess()` method repeatedly for each target word,
+        sending guesses to the server (or grading locally) and collecting hints.
+
+        Args:
+            grade_local: If True, grade guesses locally without contacting the server.
+                        If False (default), submit guesses to tournament server for grading.
+
+        Example:
+            >>> bot = MyBot("team-123")
+            >>> bot.evaluate(grade_local=True)   # Test locally
+            >>> bot.evaluate(grade_local=False)  # Submit to tournament
         """
         ...
 

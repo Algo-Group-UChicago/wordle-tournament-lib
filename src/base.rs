@@ -20,17 +20,21 @@ impl UChicagoWordleBotBase {
         UChicagoWordleBotBase { team_id }
     }
 
-    pub fn evaluate(slf: Bound<'_, Self>) -> PyResult<()> {
+    pub fn evaluate(slf: Bound<'_, Self>, grade_local: bool) -> PyResult<()> {
         let py = slf.py();
         let team_id: &str = &slf.borrow().team_id;
-
-        // send start signal to server
-        slf.borrow().send_start_signal_to_server(team_id)?;
 
         // Each element of this vector is a guess history per target word that we grow via calling
         //   user's guess() method and sending guesses to backend to recieve hints.
         let hint_map: Vec<Bound<PyList>> =
             (0..NUM_TARGET_WORDS).map(|_| PyList::empty(py)).collect();
+
+        if grade_local {
+            println!("Beginning evaluation (local grading)");
+        } else {
+            println!("Beginning evaluation (remote grading)");
+            slf.borrow().send_start_signal_to_server(team_id)?;
+        }
 
         for _ in 0..20 {
             let mut guesses = vec![];
@@ -54,17 +58,29 @@ impl UChicagoWordleBotBase {
                 guesses.push(guess);
             }
 
-            let new_hints = slf.borrow().submit_guesses_to_server(team_id, &guesses)?;
+            let new_hints = if grade_local {
+                slf.borrow().grade_guesses_locally(&guesses)?
+            } else {
+                slf.borrow().submit_guesses_to_server(team_id, &guesses)?
+            };
+            
             for (i, hint_list) in hint_map.iter().enumerate() {
                 let hint = Py::new(py, new_hints[i].clone())?;
                 hint_list.append(hint)?;
             }
         }
 
-        // send end signal to server
-        slf.borrow().send_end_signal_to_server(team_id)?;
+        // Calculate final score
+        let avg_num_guesses: f64;
+        if grade_local {
+            println!("Ending evaluation (local grading)");
+            avg_num_guesses = Self::calculate_local_score(&hint_map, team_id)?;
+        } else {
+            println!("Ending evaluation (remote grading)");
+            avg_num_guesses = slf.borrow().send_end_signal_to_server(team_id)?;
+        }
 
-        println!("Team {} eval completed", team_id);
+        println!("Team {} eval completed: Avg num guesses = {:.2}", team_id, avg_num_guesses);
         Ok(())
     }
 
@@ -76,26 +92,40 @@ impl UChicagoWordleBotBase {
 }
 
 impl UChicagoWordleBotBase {
+    fn calculate_local_score(hint_map: &[Bound<PyList>], team_id: &str) -> Result<f64, PyErr> {
+        let mut tot_guesses = 0.0;
+        
+        for hint_list in hint_map.iter() {
+            if hint_list.len() > 0 {
+                let last_hint: Bound<WordleHint> =
+                    hint_list.get_item(hint_list.len() - 1)?.extract()?;
+                if !last_hint.borrow().is_fully_correct() {
+                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                        format!("Team {} failed to guess some words", team_id)
+                    ));
+                }
+                // find number of guesses it took for the given word
+                let first_correct_index = hint_list.iter()
+                    .position(|hint| {
+                        hint.extract::<Bound<WordleHint>>()
+                            .ok()
+                            .map(|h| h.borrow().is_fully_correct())
+                            .unwrap_or(false)
+                    })
+                    .unwrap();
+                tot_guesses += (first_correct_index + 1) as f64;
+            }
+        }
+        
+        Ok(tot_guesses / NUM_TARGET_WORDS as f64)
+    }
+
     fn submit_guesses_to_server(
         &self,
         _team_id: &str,
-        guesses: &[String],
+        _guesses: &[String],
     ) -> Result<Vec<WordleHint>, PyErr> {
-        // todo!("Implemenet sending logic")
-
-        // for now I'm gonna return dumb grading - otherwise we'd be balling w oneshot server call
-        let mut hints = vec![];
-        for guess in guesses {
-            // The most recent hint being "OOOOO" will signal the middleware to not call guess() and use DUMMY_GUESS instead
-            if guess == DUMMY_GUESS {
-                hints.push(WordleHint::new_hint(guess.clone(), "OOOOO".to_string())?);
-                continue;
-            }
-            hints.push(WordleHint::new_hint(guess.clone(), "XXXXX".to_string())?);
-        }
-
-        assert_eq!(hints.len(), guesses.len()); // turn this into an error check once server logic is implemented
-        Ok(hints) // we want to still return Ok(hints) later, but the block above this will instead be [formatting -> API call -> parsing]
+        todo!("Implemenet sending logic")
     }
 
     fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
@@ -104,9 +134,24 @@ impl UChicagoWordleBotBase {
         Ok(())
     }
 
-    fn send_end_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
+    fn send_end_signal_to_server(&self, _team_id: &str) -> Result<f64, PyErr> {
         // todo!("Implement sending end signal to server")
         // this will probably end some kind of timer, record the user's final score, shuffle the user's answer key for the next run etc.
-        Ok(())
+        // should return the avg number of guesses
+        Ok(0.0)
+    }
+
+    fn grade_guesses_locally(&self, guesses: &[String]) -> Result<Vec<WordleHint>, PyErr> {
+        // todo!("Implement local grading logic")
+        // For now, return dummy hints
+        let mut hints = vec![];
+        for guess in guesses {
+            if guess == DUMMY_GUESS {
+                hints.push(WordleHint::new_hint(guess.clone(), "OOOOO".to_string())?);
+            } else {
+                hints.push(WordleHint::new_hint(guess.clone(), "XXXXX".to_string())?);
+            }
+        }
+        Ok(hints)
     }
 }
