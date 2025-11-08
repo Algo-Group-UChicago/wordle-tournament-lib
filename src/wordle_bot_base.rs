@@ -23,6 +23,38 @@ impl UChicagoWordleBotBase {
         UChicagoWordleBotBase { team_id }
     }
 
+    pub fn evaluate_on_word(slf: Bound<'_, Self>, answer: String, logging: bool) -> PyResult<i64> {
+        if logging {
+            println!("Evaluating bot on answer: {}", answer);
+            println!("----------------------------------------------------");
+        }
+        let py = slf.py();
+        let hint_list = PyList::empty(py);
+        let mut guesses = vec![];
+        
+        for num_guesses in 1..=MAX_GUESSES {
+            let guess: String = slf.call_method1("guess", (&hint_list,))?.extract()?;
+            if !is_valid_word(&guess) {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("Guess {} is not a valid word - must be in corpus", guess),
+                ));
+            }
+            guesses.push(guess.clone());
+            let hint = grade_guess(&guess, &answer);
+            if logging {
+                hint.visualize_hint()?;
+            }
+            if hint.is_fully_correct() {
+                return Ok(num_guesses as i64);
+            }
+            hint_list.append(Py::new(py, hint)?)?;
+        }
+        
+        Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            format!("Failed to guess answer in {} guesses", MAX_GUESSES),
+        ))
+    }
+
     pub fn evaluate(slf: Bound<'_, Self>, grade_local: bool) -> PyResult<f64> {
         let py = slf.py();
         let team_id: &str = &slf.borrow().team_id;

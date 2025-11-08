@@ -131,6 +131,52 @@ class UChicagoWordleBotBase:
         """
         ...
 
+    def evaluate_on_word(self, answer: str, logging: bool = True) -> int:
+        """
+        Evaluate the bot on a single word, returning the number of guesses needed.
+
+        This method runs the bot against a single target word, calling guess()
+        repeatedly until the word is solved or MAX_GUESSES is reached.
+
+        Args:
+            answer: The target word to solve (must be a valid 5-letter word)
+            logging: If True (default), prints evaluation progress and visualizes hints.
+                    If False, runs silently and only returns the result.
+
+        Returns:
+            Number of guesses it took to solve the word
+
+        Raises:
+            ValueError: If the answer is not a valid word
+            ValueError: If the bot fails to solve the word in MAX_GUESSES attempts
+
+        Example:
+            >>> bot = MyBot("team-123")
+            >>> guesses = bot.evaluate_on_word("crane", logging=True)
+            Evaluating bot on answer: crane
+            ----------------------------------------------------
+            B E A U T
+            ⬜ 🟨 🟩 ⬜ ⬜
+            A M A Z E
+            ⬜ ⬜ 🟩 ⬜ 🟩
+            S H A V E
+            ⬜ ⬜ 🟩 ⬜ 🟩
+            F L A R E
+            ⬜ ⬜ 🟩 🟨 🟩
+            G R A D E
+            ⬜ 🟩 🟩 ⬜ 🟩
+            C R A N E
+            🟩 🟩 🟩 🟩 🟩
+            >>> print(f"Solved in {guesses} guesses")
+            Solved in 6 guesses
+            
+            >>> # Or run silently:
+            >>> guesses = bot.evaluate_on_word("crane", logging=False)
+            >>> print(f"Solved in {guesses} guesses")
+            Solved in 6 guesses
+        """
+        ...
+
     def guess(self, hints: List[WordleHint]) -> str:
         """
         Make a guess based on previous hints.

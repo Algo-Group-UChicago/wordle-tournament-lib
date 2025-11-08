@@ -75,7 +75,7 @@ impl WordleHint {
         self.hints.iter().map(|h| h.to_char()).collect()
     }
 
-    fn visualize_hint(&self) -> PyResult<()> {
+    pub fn visualize_hint(&self) -> PyResult<()> {
         let mut letters = Vec::new();
         let mut squares = Vec::new();
 
