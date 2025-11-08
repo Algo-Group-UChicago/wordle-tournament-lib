@@ -71,7 +71,7 @@ impl WordleHint {
     }
 
     #[getter]
-    pub fn hints(&self) -> Vec<char> {
+    pub fn hints(&self) -> String {
         self.hints.iter().map(|h| h.to_char()).collect()
     }
 

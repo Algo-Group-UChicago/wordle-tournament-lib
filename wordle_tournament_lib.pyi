@@ -41,12 +41,12 @@ class WordleHint:
         ...
     
     @property
-    def hints(self) -> List[str]:
+    def hints(self) -> str:
         """
-        Get the hint pattern as a list of single-character strings.
+        Get the hint pattern as a string.
         
         Returns:
-            List of hint characters: ['O', '~', 'X', ...]
+            String of hint characters: 'O~XX~' etc.
         """
         ...
     
