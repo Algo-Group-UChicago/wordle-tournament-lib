@@ -23,9 +23,6 @@ pub fn get_grading_answer_key() -> &'static Vec<&'static str> {
     })
 }
 
-
-
-
 pub fn is_valid_word(word: &str) -> bool {
     get_corpus().contains(word)
 }

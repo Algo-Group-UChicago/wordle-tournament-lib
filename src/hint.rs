@@ -59,10 +59,7 @@ impl WordleHint {
                 format!("Expected exactly {} hints", WORD_LENGTH)
             ))?;
 
-        Ok(WordleHint {
-            word,
-            hints: hint_array,
-        })
+        Ok(WordleHint::new(word, hint_array))
     }
 
     #[getter]
@@ -74,7 +71,7 @@ impl WordleHint {
     }
 
     #[getter]
-    fn hints(&self) -> Vec<char> {
+    pub fn hints(&self) -> Vec<char> {
         self.hints.iter().map(|h| h.to_char()).collect()
     }
 
