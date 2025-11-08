@@ -95,7 +95,7 @@ class UChicagoWordleBotBase:
         ...         # Your guessing logic here
         ...         return "crane"
         >>>
-        >>> bot = MyBot("team-uuid")
+        >>> bot = MyBot("kathir n' akash")
     """
 
     team_id: str
