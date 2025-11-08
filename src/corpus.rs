@@ -1,6 +1,6 @@
+use crate::hint::WORD_LENGTH;
 use std::collections::HashSet;
 use std::sync::OnceLock;
-use crate::hint::WORD_LENGTH;
 
 pub const ALL_WORDS_LIST: &str = include_str!("../corpus.txt");
 pub const ANSWER_KEY_LIST: &str = include_str!("../possible_answers.txt");
@@ -9,9 +9,7 @@ static CORPUS: OnceLock<HashSet<&'static str>> = OnceLock::new();
 static GRADING_ANSWER_KEY: OnceLock<Vec<&'static str>> = OnceLock::new();
 
 pub fn get_corpus() -> &'static HashSet<&'static str> {
-    CORPUS.get_or_init(|| {
-        ALL_WORDS_LIST.lines().collect()
-    })
+    CORPUS.get_or_init(|| ALL_WORDS_LIST.lines().collect())
 }
 
 pub fn get_grading_answer_key() -> &'static Vec<&'static str> {
@@ -42,7 +40,13 @@ mod tests {
     fn test_all_words_correct_length() {
         let corpus = get_corpus();
         for word in corpus {
-            assert_eq!(word.len(), WORD_LENGTH, "Word '{}' is not {} letters", word, WORD_LENGTH);
+            assert_eq!(
+                word.len(),
+                WORD_LENGTH,
+                "Word '{}' is not {} letters",
+                word,
+                WORD_LENGTH
+            );
         }
     }
 
@@ -61,4 +65,3 @@ mod tests {
         assert!(!is_valid_word("CRANE"));
     }
 }
-

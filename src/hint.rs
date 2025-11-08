@@ -43,9 +43,10 @@ impl WordleHint {
     #[new]
     pub fn new_hint(word: String, hints: String) -> PyResult<Self> {
         if word.len() != WORD_LENGTH {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Word must be {} letters long", WORD_LENGTH),
-            ));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Word must be {} letters long",
+                WORD_LENGTH
+            )));
         }
         if word.len() != hints.len() {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
@@ -54,10 +55,12 @@ impl WordleHint {
         }
 
         let hint_vec: Vec<HintType> = hints.chars().map(HintType::from_char).collect();
-        let hint_array: [HintType; WORD_LENGTH] = hint_vec.try_into()
-            .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                format!("Expected exactly {} hints", WORD_LENGTH)
-            ))?;
+        let hint_array: [HintType; WORD_LENGTH] = hint_vec.try_into().map_err(|_| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Expected exactly {} hints",
+                WORD_LENGTH
+            ))
+        })?;
 
         Ok(WordleHint::new(word, hint_array))
     }

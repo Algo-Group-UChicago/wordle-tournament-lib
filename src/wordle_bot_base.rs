@@ -23,7 +23,7 @@ impl UChicagoWordleBotBase {
         UChicagoWordleBotBase { team_id }
     }
 
-    // Python exposed method to grade user's guess() function on a single word
+    /// Python exposed method to grade user's guess() function on a single word
     pub fn evaluate_on_word(slf: Bound<'_, Self>, answer: String, logging: bool) -> PyResult<i64> {
         if logging {
             println!("Evaluating bot on answer: {}", answer);
@@ -32,13 +32,14 @@ impl UChicagoWordleBotBase {
         let py = slf.py();
         let hint_list = PyList::empty(py);
         let mut guesses = vec![];
-        
+
         for num_guesses in 1..=MAX_GUESSES {
             let guess: String = slf.call_method1("guess", (&hint_list,))?.extract()?;
             if !is_valid_word(&guess) {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("Guess {} is not a valid word - must be in corpus", guess),
-                ));
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Guess {} is not a valid word - must be in corpus",
+                    guess
+                )));
             }
             guesses.push(guess.clone());
             let hint = grade_guess(&guess, &answer);
@@ -50,13 +51,14 @@ impl UChicagoWordleBotBase {
             }
             hint_list.append(Py::new(py, hint)?)?;
         }
-        
-        Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-            format!("Failed to guess answer in {} guesses", MAX_GUESSES),
-        ))
+
+        Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+            "Failed to guess answer in {} guesses",
+            MAX_GUESSES
+        )))
     }
 
-    /// The big daddy method that runs tournament evaluation, either locally (only 
+    /// The big daddy method that runs tournament evaluation, either locally (only
     /// avg guess calculation) or remotely (avg guess calculation and server grading)
     pub fn evaluate(slf: Bound<'_, Self>, grade_local: bool) -> PyResult<f64> {
         let py = slf.py();
@@ -64,7 +66,7 @@ impl UChicagoWordleBotBase {
 
         // Each element of this vector is a guess history per target word that we grow via calling
         //   user's guess() method and sending guesses to backend to recieve hints.
-        let hint_map: Vec<Bound<PyList>> = 
+        let hint_map: Vec<Bound<PyList>> =
             (0..NUM_TARGET_WORDS).map(|_| PyList::empty(py)).collect();
 
         match grade_local {
@@ -92,19 +94,20 @@ impl UChicagoWordleBotBase {
 
                 let guess: String = slf.call_method1("guess", (hint_list,))?.extract()?;
                 if !is_valid_word(&guess) {
-                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                        format!("Guess {} is not a valid word - must be in corpus", guess),
-                    ));
+                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Guess {} is not a valid word - must be in corpus",
+                        guess
+                    )));
                 }
                 guesses.push(guess);
             }
 
-            // Grade new round of guesses 
+            // Grade new round of guesses
             let new_hints = match grade_local {
                 true => slf.borrow().grade_guesses_locally(&guesses)?,
                 false => slf.borrow().submit_guesses_to_server(team_id, &guesses)?,
             };
-            
+
             // Update hint_map with the new hints
             for (i, hint_list) in hint_map.iter().enumerate() {
                 let hint = Py::new(py, new_hints[i].clone())?;
@@ -118,13 +121,19 @@ impl UChicagoWordleBotBase {
         match grade_local {
             true => {
                 println!("Team {} local eval completed.", team_id);
-                println!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses);
+                println!(
+                    "Average number of guesses (unweighted) = {:.2}",
+                    avg_num_guesses
+                );
             }
             false => {
                 println!("Ending team {} evaluation (remote grading)...", team_id);
                 let score = slf.borrow().send_end_signal_to_server(team_id)?;
                 println!("Team {} remote eval completed.", team_id);
-                println!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses);
+                println!(
+                    "Average number of guesses (unweighted) = {:.2}",
+                    avg_num_guesses
+                );
                 println!("Weighted server score = {:.2}", score);
             }
         }
@@ -140,7 +149,6 @@ impl UChicagoWordleBotBase {
 }
 
 impl UChicagoWordleBotBase {
-
     /// Send start signal to server to start tournament evaluation - details to come
     fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
         // This will probably start some kind of timer
@@ -182,21 +190,23 @@ impl UChicagoWordleBotBase {
         // Ok(0.0)
     }
 
-    /// Calculate the average number of guesses it took to guess all the words (diff from server metric)
+    /// Calculate the average number of guesses it took to guess all the words based on hint map (diff from server metric)
     fn calculate_local_score(hint_map: &[Bound<PyList>]) -> Result<f64, PyErr> {
         let mut tot_guesses = 0.0;
-        
+
         for (i, hint_list) in hint_map.iter().enumerate() {
             if hint_list.len() > 0 {
                 let last_hint: Bound<WordleHint> =
                     hint_list.get_item(hint_list.len() - 1)?.extract()?;
                 if !last_hint.borrow().is_fully_correct() {
-                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                        format!("Failed to guess word: {}", get_grading_answer_key()[i])
-                    ));
+                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "Failed to guess word: {}",
+                        get_grading_answer_key()[i]
+                    )));
                 }
                 // Find number of guesses it took for the given word
-                let first_correct_index = hint_list.iter()
+                let first_correct_index = hint_list
+                    .iter()
                     .position(|hint| {
                         hint.extract::<Bound<WordleHint>>()
                             .ok()
@@ -207,7 +217,7 @@ impl UChicagoWordleBotBase {
                 tot_guesses += (first_correct_index + 1) as f64;
             }
         }
-        
+
         Ok(tot_guesses / NUM_TARGET_WORDS as f64)
     }
 }
