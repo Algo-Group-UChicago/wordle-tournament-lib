@@ -23,6 +23,7 @@ impl UChicagoWordleBotBase {
         UChicagoWordleBotBase { team_id }
     }
 
+    // Python exposed method to grade user's guess() function on a single word
     pub fn evaluate_on_word(slf: Bound<'_, Self>, answer: String, logging: bool) -> PyResult<i64> {
         if logging {
             println!("Evaluating bot on answer: {}", answer);
@@ -55,6 +56,8 @@ impl UChicagoWordleBotBase {
         ))
     }
 
+    /// The big daddy method that runs tournament evaluation, either locally (only 
+    /// avg guess calculation) or remotely (avg guess calculation and server grading)
     pub fn evaluate(slf: Bound<'_, Self>, grade_local: bool) -> PyResult<f64> {
         let py = slf.py();
         let team_id: &str = &slf.borrow().team_id;
@@ -138,11 +141,13 @@ impl UChicagoWordleBotBase {
 
 impl UChicagoWordleBotBase {
 
+    /// Send start signal to server to start tournament evaluation - details to come
     fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
         // This will probably start some kind of timer
         todo!("Implement sending start signal to server")
     }
 
+    /// Submit a round of guesses to server and return the corresponding hints based on answer key - details to come
     fn submit_guesses_to_server(
         &self,
         _team_id: &str,
@@ -152,8 +157,8 @@ impl UChicagoWordleBotBase {
         todo!("Implement guess sending logic")
     }
 
+    /// Grade a round of guesses locally and return hints
     fn grade_guesses_locally(&self, guesses: &[String]) -> Result<Vec<WordleHint>, PyErr> {
-        // This is the local versoin of submit_guesses_to_server()
         let answer_key = get_grading_answer_key();
 
         let mut hints = vec![];
@@ -169,6 +174,7 @@ impl UChicagoWordleBotBase {
         Ok(hints)
     }
 
+    /// Send end signal to server to end tournament evaluation and return score - details to come
     fn send_end_signal_to_server(&self, _team_id: &str) -> Result<f64, PyErr> {
         // This will probably end some kind of timer, record the user's final score, shuffle the user's answer key for the next run etc.
         todo!("Implement sending end signal to server")
@@ -176,8 +182,8 @@ impl UChicagoWordleBotBase {
         // Ok(0.0)
     }
 
+    /// Calculate the average number of guesses it took to guess all the words (diff from server metric)
     fn calculate_local_score(hint_map: &[Bound<PyList>]) -> Result<f64, PyErr> {
-        // This calculates the average number of guesses it took to guess all the words (diff from server metric)
         let mut tot_guesses = 0.0;
         
         for (i, hint_list) in hint_map.iter().enumerate() {
