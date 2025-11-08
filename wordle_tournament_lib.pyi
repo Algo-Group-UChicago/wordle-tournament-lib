@@ -110,7 +110,7 @@ class UChicagoWordleBotBase:
         """
         ...
 
-    def evaluate(self, grade_local: bool) -> None:
+    def evaluate(self, grade_local: bool) -> float:
         """
         Run the tournament evaluation for this bot.
 
@@ -119,12 +119,15 @@ class UChicagoWordleBotBase:
 
         Args:
             grade_local: If True, grade guesses locally without contacting the server.
-                        If False (default), submit guesses to tournament server for grading.
+                        If False, submit guesses to tournament server for grading.
+
+        Returns:
+            Average number of guesses per word (different from server score, which
+            will be printed granted that grade_local is False)
 
         Example:
             >>> bot = MyBot("team-123")
-            >>> bot.evaluate(grade_local=True)   # Test locally
-            >>> bot.evaluate(grade_local=False)  # Submit to tournament
+            >>> score = bot.evaluate(grade_local=True)   # Test locally
         """
         ...
 

@@ -23,7 +23,7 @@ impl UChicagoWordleBotBase {
         UChicagoWordleBotBase { team_id }
     }
 
-    pub fn evaluate(slf: Bound<'_, Self>, grade_local: bool) -> PyResult<()> {
+    pub fn evaluate(slf: Bound<'_, Self>, grade_local: bool) -> PyResult<f64> {
         let py = slf.py();
         let team_id: &str = &slf.borrow().team_id;
 
@@ -79,19 +79,22 @@ impl UChicagoWordleBotBase {
 
         // Calculate final score
         let avg_num_guesses: f64;
+        avg_num_guesses = Self::calculate_local_score(&hint_map)?;
         match grade_local {
             true => {
-                println!("Ending evaluation (local grading)");
-                avg_num_guesses = Self::calculate_local_score(&hint_map, team_id)?;
+                println!("Team {} local eval completed.", team_id);
+                println!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses);
             }
             false => {
-                println!("Ending evaluation (remote grading)");
-                avg_num_guesses = slf.borrow().send_end_signal_to_server(team_id)?;
+                println!("Ending team {} evaluation (remote grading)...", team_id);
+                let score = slf.borrow().send_end_signal_to_server(team_id)?;
+                println!("Team {} remote eval completed.", team_id);
+                println!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses);
+                println!("Weighted server score = {:.2}", score);
             }
         }
 
-        println!("Team {} eval completed: Avg num guesses = {:.2}", team_id, avg_num_guesses);
-        Ok(())
+        Ok(avg_num_guesses)
     }
 
     pub fn guess(&self, _py: Python, _hints: Vec<Py<WordleHint>>) -> PyResult<String> {
@@ -141,8 +144,8 @@ impl UChicagoWordleBotBase {
         // Ok(0.0)
     }
 
-    fn calculate_local_score(hint_map: &[Bound<PyList>], team_id: &str) -> Result<f64, PyErr> {
-        // This is the local version of send_end_signal_to_server()
+    fn calculate_local_score(hint_map: &[Bound<PyList>]) -> Result<f64, PyErr> {
+        // This calculates the average number of guesses it took to guess all the words (diff from server metric)
         let mut tot_guesses = 0.0;
         
         for (i, hint_list) in hint_map.iter().enumerate() {
@@ -151,7 +154,7 @@ impl UChicagoWordleBotBase {
                     hint_list.get_item(hint_list.len() - 1)?.extract()?;
                 if !last_hint.borrow().is_fully_correct() {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                        format!("Team {} failed to guess word: {}", team_id, get_grading_answer_key()[i])
+                        format!("Failed to guess word: {}", get_grading_answer_key()[i])
                     ));
                 }
                 // Find number of guesses it took for the given word
