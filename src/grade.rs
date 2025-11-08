@@ -1,4 +1,5 @@
 use crate::hint::{HintType, WordleHint, WORD_LENGTH};
+use pyo3::prelude::*;
 
 pub fn grade_guess(guess: &str, answer: &str) -> WordleHint {
     assert_eq!(guess.len(), WORD_LENGTH);
@@ -25,6 +26,23 @@ pub fn grade_guess(guess: &str, answer: &str) -> WordleHint {
     }
 
     WordleHint::new(guess.to_string(), hint_arr)
+}
+
+#[pyfunction(name = "grade_guess")]
+pub fn grade_guess_py(guess: String, answer: String) -> PyResult<WordleHint> {
+    // Python wrapper for grade_guess - validates inputs and returns WordleHint
+    // I'm gonna avoid publicly exposing grade_guess to the .pyi file since it makes things really easy
+    if guess.len() != WORD_LENGTH {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            format!("Guess must be {} letters long, got {}", WORD_LENGTH, guess.len()),
+        ));
+    }
+    if answer.len() != WORD_LENGTH {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            format!("Answer must be {} letters long, got {}", WORD_LENGTH, answer.len()),
+        ));
+    }
+    Ok(grade_guess(&guess, &answer))
 }
 
 #[cfg(test)]
