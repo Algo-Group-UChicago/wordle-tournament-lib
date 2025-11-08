@@ -74,20 +74,6 @@ class WordleHint:
         """
         ...
     
-    def is_fully_correct(self) -> bool:
-        """
-        Check if all hints indicate correct positions (all 'O's).
-        
-        Returns:
-            True if the guess was completely correct, False otherwise
-        
-        Example:
-            >>> hint = WordleHint("crane", "OOOOO")
-            >>> hint.is_fully_correct()
-            True
-        """
-        ...
-    
     def __repr__(self) -> str:
         """Return string representation of WordleHint."""
         ...

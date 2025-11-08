@@ -1,5 +1,7 @@
 use pyo3::prelude::*;
 
+pub const WORD_LENGTH: usize = 5;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HintType {
     Correct,
@@ -19,7 +21,7 @@ impl HintType {
         }
     }
 
-    fn to_char(self) -> char {
+    pub fn to_char(self) -> char {
         match self {
             HintType::Correct => 'O',
             HintType::Present => '~',
@@ -33,16 +35,16 @@ impl HintType {
 pub struct WordleHint {
     #[pyo3(get)]
     word: String,
-    hints: Vec<HintType>,
+    hints: [HintType; WORD_LENGTH],
 }
 
 #[pymethods]
 impl WordleHint {
     #[new]
     pub fn new_hint(word: String, hints: String) -> PyResult<Self> {
-        if word.len() != 5 {
+        if word.len() != WORD_LENGTH {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                "Word must be 5 letters long",
+                format!("Word must be {} letters long", WORD_LENGTH),
             ));
         }
         if word.len() != hints.len() {
@@ -51,11 +53,15 @@ impl WordleHint {
             ));
         }
 
-        let hint_types: Vec<HintType> = hints.chars().map(HintType::from_char).collect();
+        let hint_vec: Vec<HintType> = hints.chars().map(HintType::from_char).collect();
+        let hint_array: [HintType; WORD_LENGTH] = hint_vec.try_into()
+            .map_err(|_| PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                format!("Expected exactly {} hints", WORD_LENGTH)
+            ))?;
 
         Ok(WordleHint {
             word,
-            hints: hint_types,
+            hints: hint_array,
         })
     }
 
@@ -90,10 +96,6 @@ impl WordleHint {
         Ok(())
     }
 
-    pub fn is_fully_correct(&self) -> bool {
-        self.hints.iter().all(|h| *h == HintType::Correct)
-    }
-
     fn __repr__(&self) -> String {
         let hint_chars: Vec<String> = self
             .hints
@@ -105,5 +107,19 @@ impl WordleHint {
             self.word,
             hint_chars.join(", ")
         )
+    }
+}
+
+impl WordleHint {
+    pub fn new(word: String, hints: [HintType; WORD_LENGTH]) -> Self {
+        WordleHint { word, hints }
+    }
+
+    pub fn new_all_correct(word: String) -> Self {
+        WordleHint::new(word, [HintType::Correct; WORD_LENGTH])
+    }
+
+    pub fn is_fully_correct(&self) -> bool {
+        self.hints.iter().all(|h| *h == HintType::Correct)
     }
 }

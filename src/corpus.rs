@@ -1,15 +1,30 @@
 use std::collections::HashSet;
 use std::sync::OnceLock;
+use crate::hint::WORD_LENGTH;
 
-pub const WORD_LIST: &str = include_str!("../corpus.txt");
+pub const ALL_WORDS_LIST: &str = include_str!("../corpus.txt");
+pub const ANSWER_KEY_LIST: &str = include_str!("../possible_answers.txt");
 
 static CORPUS: OnceLock<HashSet<&'static str>> = OnceLock::new();
+static GRADING_ANSWER_KEY: OnceLock<Vec<&'static str>> = OnceLock::new();
 
 pub fn get_corpus() -> &'static HashSet<&'static str> {
     CORPUS.get_or_init(|| {
-        WORD_LIST.lines().collect()
+        ALL_WORDS_LIST.lines().collect()
     })
 }
+
+pub fn get_grading_answer_key() -> &'static Vec<&'static str> {
+    GRADING_ANSWER_KEY.get_or_init(|| {
+        ANSWER_KEY_LIST
+            .lines()
+            .filter(|word| word.len() == WORD_LENGTH)
+            .collect()
+    })
+}
+
+
+
 
 pub fn is_valid_word(word: &str) -> bool {
     get_corpus().contains(word)
@@ -27,10 +42,10 @@ mod tests {
     }
 
     #[test]
-    fn test_all_words_5_letters() {
+    fn test_all_words_correct_length() {
         let corpus = get_corpus();
         for word in corpus {
-            assert_eq!(word.len(), 5, "Word '{}' is not 5 letters", word);
+            assert_eq!(word.len(), WORD_LENGTH, "Word '{}' is not {} letters", word, WORD_LENGTH);
         }
     }
 

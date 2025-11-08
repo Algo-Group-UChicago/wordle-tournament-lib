@@ -1,4 +1,5 @@
-use crate::corpus::{get_corpus, is_valid_word};
+use crate::corpus::{get_grading_answer_key, is_valid_word};
+use crate::grade::grade_guess;
 use crate::hint::WordleHint;
 use pyo3::exceptions::PyNotImplementedError;
 use pyo3::prelude::*;
@@ -6,6 +7,7 @@ use pyo3::types::PyList;
 use pyo3::Bound;
 
 const NUM_TARGET_WORDS: usize = 1000;
+const MAX_GUESSES: usize = 20;
 const DUMMY_GUESS: &str = "imagine guessing more than 5 letters";
 
 #[pyclass(subclass)]
@@ -37,7 +39,7 @@ impl UChicagoWordleBotBase {
             slf.borrow().send_start_signal_to_server(team_id)?;
         }
 
-        for _ in 0..20 {
+        for _ in 0..MAX_GUESSES {
             let mut guesses = vec![];
             for hint_list in hint_map.iter() {
                 // Skip calling guess() if they've already guessed the word
@@ -59,12 +61,13 @@ impl UChicagoWordleBotBase {
                 guesses.push(guess);
             }
 
-            let new_hints = if grade_local {
-                slf.borrow().grade_guesses_locally(&guesses)?
-            } else {
-                slf.borrow().submit_guesses_to_server(team_id, &guesses)?
+            // Grade new round of guesses 
+            let new_hints = match grade_local {
+                true => slf.borrow().grade_guesses_locally(&guesses)?,
+                false => slf.borrow().submit_guesses_to_server(team_id, &guesses)?,
             };
             
+            // Update hint_map with the new hints
             for (i, hint_list) in hint_map.iter().enumerate() {
                 let hint = Py::new(py, new_hints[i].clone())?;
                 hint_list.append(hint)?;
@@ -93,7 +96,47 @@ impl UChicagoWordleBotBase {
 }
 
 impl UChicagoWordleBotBase {
+
+    fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
+        // This will probably start some kind of timer
+        todo!("Implement sending start signal to server")
+    }
+
+    fn submit_guesses_to_server(
+        &self,
+        _team_id: &str,
+        _guesses: &[String],
+    ) -> Result<Vec<WordleHint>, PyErr> {
+        // For an array of guesses, this send to server and returns corresponding hints based on the answer key (stored + tracked unqiuely for each user)
+        todo!("Implement guess sending logic")
+    }
+
+    fn grade_guesses_locally(&self, guesses: &[String]) -> Result<Vec<WordleHint>, PyErr> {
+        // This is the local versoin of submit_guesses_to_server()
+        let answer_key = get_grading_answer_key();
+
+        let mut hints = vec![];
+        for guess in guesses {
+            let hint;
+            if guess == DUMMY_GUESS {
+                hint = WordleHint::new_all_correct(guess.clone());
+            } else {
+                hint = grade_guess(guess, answer_key[0]);
+            }
+            hints.push(hint);
+        }
+        Ok(hints)
+    }
+
+    fn send_end_signal_to_server(&self, _team_id: &str) -> Result<f64, PyErr> {
+        // This will probably end some kind of timer, record the user's final score, shuffle the user's answer key for the next run etc.
+        todo!("Implement sending end signal to server")
+        // Should return the avg number of guesses
+        // Ok(0.0)
+    }
+
     fn calculate_local_score(hint_map: &[Bound<PyList>], team_id: &str) -> Result<f64, PyErr> {
+        // This is the local version of send_end_signal_to_server()
         let mut tot_guesses = 0.0;
         
         for hint_list in hint_map.iter() {
@@ -105,7 +148,7 @@ impl UChicagoWordleBotBase {
                         format!("Team {} failed to guess some words - we will error out", team_id)
                     ));
                 }
-                // find number of guesses it took for the given word
+                // Find number of guesses it took for the given word
                 let first_correct_index = hint_list.iter()
                     .position(|hint| {
                         hint.extract::<Bound<WordleHint>>()
@@ -119,40 +162,5 @@ impl UChicagoWordleBotBase {
         }
         
         Ok(tot_guesses / NUM_TARGET_WORDS as f64)
-    }
-
-    fn submit_guesses_to_server(
-        &self,
-        _team_id: &str,
-        _guesses: &[String],
-    ) -> Result<Vec<WordleHint>, PyErr> {
-        todo!("Implemenet sending logic")
-    }
-
-    fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
-        // todo!("Implement sending start signal to server")
-        // this will probably start some kind of timer
-        Ok(())
-    }
-
-    fn send_end_signal_to_server(&self, _team_id: &str) -> Result<f64, PyErr> {
-        // todo!("Implement sending end signal to server")
-        // this will probably end some kind of timer, record the user's final score, shuffle the user's answer key for the next run etc.
-        // should return the avg number of guesses
-        Ok(0.0)
-    }
-
-    fn grade_guesses_locally(&self, guesses: &[String]) -> Result<Vec<WordleHint>, PyErr> {
-        // todo!("Implement local grading logic")
-        // For now, return dummy hints
-        let mut hints = vec![];
-        for guess in guesses {
-            if guess == DUMMY_GUESS {
-                hints.push(WordleHint::new_hint(guess.clone(), "OOOOO".to_string())?);
-            } else {
-                hints.push(WordleHint::new_hint(guess.clone(), "XXXXX".to_string())?);
-            }
-        }
-        Ok(hints)
     }
 }
