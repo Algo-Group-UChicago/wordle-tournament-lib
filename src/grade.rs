@@ -31,55 +31,51 @@ pub fn grade_guess(guess: &str, answer: &str) -> WordleHint {
 mod tests {
     use super::*;
 
-    fn hint_to_string(hint: &WordleHint) -> String {
-        hint.hints().iter().map(|c| *c).collect()
-    }
-
     #[test]
-    fn test_all_grey() {
+    fn test_all_absent() {
         let result = grade_guess("crane", "built");
-        assert_eq!(hint_to_string(&result), "XXXXX");
+        assert_eq!(result.hints(), "XXXXX");
     }
 
     #[test]
-    fn test_all_green() {
+    fn test_all_correct() {
         let result = grade_guess("crane", "crane");
-        assert_eq!(hint_to_string(&result), "OOOOO");
+        assert_eq!(result.hints(), "OOOOO");
     }
 
     #[test]
-    fn test_duplicate_in_target_causes_yellow() {
+    fn test_duplicate_in_target_causes_present() {
         let result = grade_guess("roost", "robot");
-        assert_eq!(hint_to_string(&result), "OO~XO");
+        assert_eq!(result.hints(), "OO~XO");
     }
 
     #[test]
     fn test_guess_has_more_duplicates_than_target() {
         let result = grade_guess("allee", "apple");
-        assert_eq!(hint_to_string(&result), "O~XXO");
+        assert_eq!(result.hints(), "O~XXO");
     }
 
     #[test]
     fn test_no_matches() {
         let result = grade_guess("crane", "yummy");
-        assert_eq!(hint_to_string(&result), "XXXXX");
+        assert_eq!(result.hints(), "XXXXX");
     }
 
     #[test]
-    fn test_mixed_duplicates_and_greens() {
+    fn test_mixed_duplicates_and_correct() {
         let result = grade_guess("ABBEY", "BANAL");
-        assert_eq!(hint_to_string(&result), "~~XXX");
+        assert_eq!(result.hints(), "~~XXX");
     }
 
     #[test]
-    fn test_duplicate_green_and_yellow_same_letter() {
+    fn test_duplicate_correct_and_present_same_letter() {
         let result = grade_guess("array", "alarm");
-        assert_eq!(hint_to_string(&result), "O~X~X");
+        assert_eq!(result.hints(), "O~X~X");
     }
 
     #[test]
-    fn test_yellow_does_not_steal_from_green() {
+    fn test_present_does_not_steal_from_correct() {
         let result = grade_guess("babee", "aback");
-        assert_eq!(hint_to_string(&result), "~~XXX");
+        assert_eq!(result.hints(), "~~XXX");
     }
 }
