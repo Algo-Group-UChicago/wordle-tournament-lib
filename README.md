@@ -39,6 +39,8 @@ A high-performance Rust library for Wordle tournament functionality, exposed to 
 
 After installing with `maturin develop`, you can test it in Python:
 
+#### Basic Usage - WordleHint
+
 ```python
 from wordle_tournament_lib import WordleHint
 
@@ -50,10 +52,10 @@ hint = WordleHint("hello", "O~XX~")
 
 # Access properties
 print(hint.word)  # "hello"
-print(hint.hints)  # ['O', '~', 'X', 'X', '~']
+print(hint.hints)  # "O~XX~" (returns string)
 print(hint.word_hint_pairs)  # [('h', 'O'), ('e', '~'), ('l', 'X'), ('l', 'X'), ('o', '~')]
 
-# Visualize (prints to stdout, like the original Python version)
+# Visualize (prints to stdout)
 hint.visualize_hint()
 # Output:
 # H E L L O
@@ -63,7 +65,38 @@ hint.visualize_hint()
 print(repr(hint))  # WordleHint(word='hello', hints=['O', '~', 'X', 'X', '~'])
 ```
 
-The library uses a simple string-based API for Python users:
+#### Creating a Bot
+
+```python
+from wordle_tournament_lib import UChicagoWordleBotBase, WordleHint
+
+class MyBot(UChicagoWordleBotBase):
+    def __init__(self, team_id: str):
+        # Load your word lists, initialize state, etc.
+        pass
+    
+    def guess(self, hints: list[WordleHint]) -> str:
+        """Implement your guessing strategy here."""
+        if not hints:
+            return "crane"  # First guess
+        # Analyze hints and return next guess
+        return "stare"
+
+# Create and test your bot
+bot = MyBot("my-team-id")
+
+# Test on a single word
+guesses = bot.evaluate_on_word("crane", logging=True)
+print(f"Solved in {guesses} guesses")
+
+# Run full tournament evaluation (1000 words)
+score = bot.evaluate(grade_local=True)
+print(f"Average guesses: {score:.2}")
+```
+
+#### Hint Characters
+
+The library uses a simple string-based API:
 - **'O'** - Correct letter in correct position (🟩 green)
 - **'~'** - Letter is present but in wrong position (🟨 yellow)
 - **'X'** - Letter is absent from the word (⬜ gray)
@@ -110,9 +143,14 @@ wordle-tournament-lib/
 ├── Cargo.toml                    # Rust package configuration
 ├── pyproject.toml                # Python package configuration
 ├── wordle_tournament_lib.pyi     # Type stubs for IDE support
+├── corpus.txt                    # Valid guess words (embedded in binary)
+├── possible_answers.txt          # Answer key words (embedded in binary)
 ├── src/
 │   ├── lib.rs                   # Main library entry point (PyO3 module)
-│   └── hint.rs                  # Hint types and WordleHint implementation
+│   ├── hint.rs                  # Hint types and WordleHint implementation
+│   ├── grade.rs                 # Wordle grading algorithm
+│   ├── corpus.rs                # Word corpus management
+│   └── wordle_bot_base.rs       # UChicagoWordleBotBase class
 └── README.md
 ```
 
@@ -130,8 +168,9 @@ When adding new Rust modules to the library:
 3. **Expose Python classes/functions in the `#[pymodule]` function**:
    ```rust
    #[pymodule]
-   fn wordle_tournament_lib(_py: Python, m: &PyModule) -> PyResult<()> {
+   fn wordle_tournament_lib(m: &Bound<'_, PyModule>) -> PyResult<()> {
        m.add_class::<hint::WordleHint>()?;
+       m.add_class::<wordle_bot_base::UChicagoWordleBotBase>()?;
        m.add_class::<new_module::NewClass>()?;  // Add your new class
        Ok(())
    }
@@ -142,17 +181,67 @@ When adding new Rust modules to the library:
    maturin develop
    ```
 
-## How It Works
+## Key Features
 
-### Internal vs External Types
+### Tournament Evaluation
 
-- **In Rust**: `HintType` is a type-safe enum used internally for performance and correctness
+- **`evaluate(grade_local: bool)`**: Runs full tournament (1000 words, 20 max guesses each)
+  - Returns average number of guesses per word (float)
+  - `grade_local=True`: Grades locally without server (for testing)
+  - `grade_local=False`: Submits to tournament server
+
+- **`evaluate_on_word(answer: str, logging: bool = True)`**: Test on a single word
+  - Returns number of guesses needed (int)
+  - `logging=True`: Shows visual progress with emoji squares
+  - `logging=False`: Silent mode for batch testing
+
+### Word Validation
+
+- All guesses are validated against the embedded corpus
+- Invalid words raise `ValueError` immediately
+- Corpus is embedded in binary (no file I/O at runtime)
+
+### How It Works
+
+#### Internal vs External Types
+
+- **In Rust**: `HintType` is a type-safe enum used internally for performance
 - **In Python**: Users work with simple strings ('O', '~', 'X') for ease of use
-- **Conversion**: PyO3 automatically converts between Rust types and Python types via the `#[getter]` methods
+- **Conversion**: PyO3 automatically converts between Rust types and Python types
 
 This gives you the best of both worlds:
 - Rust code gets type safety and performance
 - Python users get a simple, intuitive API
+
+#### Grading Algorithm
+
+The library implements the standard Wordle grading algorithm:
+1. First pass: Mark correct positions (green)
+2. Second pass: Mark present letters (yellow), ensuring duplicates are handled correctly
+3. Remaining letters: Mark as absent (gray)
+
+## API Reference
+
+### UChicagoWordleBotBase
+
+Base class for creating Wordle bots. Subclass this and implement `guess()`.
+
+**Methods:**
+- `evaluate(grade_local: bool) -> float`: Run full tournament evaluation
+- `evaluate_on_word(answer: str, logging: bool = True) -> int`: Test on single word
+- `guess(hints: list[WordleHint]) -> str`: **Abstract** - implement in subclass
+
+### WordleHint
+
+Represents a guess and its hint pattern.
+
+**Properties:**
+- `word: str`: The guessed word
+- `hints: str`: Hint pattern string ('O~XX~' etc.)
+- `word_hint_pairs: list[tuple[str, str]]`: Pairs of (letter, hint)
+
+**Methods:**
+- `visualize_hint()`: Print visual representation with emoji squares
 
 ## Common Issues
 
@@ -170,6 +259,11 @@ This gives you the best of both worlds:
 
 - Restart your Python interpreter/kernel
 - If using Jupyter, restart the kernel
+
+### "Guess is not a valid word"
+
+- Your `guess()` method returned a word not in the corpus
+- Make sure to only return valid 5-letter words from the corpus
 
 ## Performance
 

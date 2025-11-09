@@ -19,3 +19,6 @@ venv/
 *.swp
 *.swo
 
+# Don't ignore corpus.txt (it's embedded in binary)
+!corpus.txt
+
