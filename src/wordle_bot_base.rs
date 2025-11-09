@@ -1,4 +1,4 @@
-use crate::common::{API_GUESSES_ENDPOINT, DUMMY_GUESS, MAX_GUESSES, NUM_TARGET_WORDS};
+use crate::common::{API_GUESSES_ENDPOINT, DUMMY_GUESS, MAX_GUESSES, NUM_TARGET_WORDS, WORD_LENGTH};
 use crate::corpus::{get_grading_answer_key, is_valid_word};
 use crate::grade::grade_guess;
 use crate::hint::{HintType, WordleHint};
@@ -250,7 +250,7 @@ impl UChicagoWordleBotBase {
             .zip(guess_response.hints.iter())
             .map(|(word, hint_str)| {
                 if word == DUMMY_GUESS {
-                    Ok(WordleHint::new_all_correct(word.clone()))
+                    Ok(WordleHint::new_all_correct("-".repeat(WORD_LENGTH)))
                 } else {
                     WordleHint::new_hint(word.clone(), hint_str.clone())
                 }
