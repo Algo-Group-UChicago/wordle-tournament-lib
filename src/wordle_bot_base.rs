@@ -1,3 +1,4 @@
+use crate::common::{DUMMY_GUESS, MAX_GUESSES, NUM_TARGET_WORDS};
 use crate::corpus::{get_grading_answer_key, is_valid_word};
 use crate::grade::grade_guess;
 use crate::hint::{HintType, WordleHint};
@@ -6,10 +7,6 @@ use pyo3::exceptions::PyNotImplementedError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use pyo3::Bound;
-
-const NUM_TARGET_WORDS: usize = 1000;
-const MAX_GUESSES: usize = 20;
-const DUMMY_GUESS: &str = "imagine guessing more than 5 letters";
 
 #[pyclass(subclass)]
 pub struct UChicagoWordleBotBase {

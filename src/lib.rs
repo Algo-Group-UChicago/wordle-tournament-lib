@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+pub mod common;
 pub mod corpus;
 pub mod grade;
 pub mod hint;

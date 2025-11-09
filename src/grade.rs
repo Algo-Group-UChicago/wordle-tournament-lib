@@ -1,4 +1,5 @@
-use crate::hint::{HintType, WordleHint, WORD_LENGTH};
+use crate::common::WORD_LENGTH;
+use crate::hint::{HintType, WordleHint};
 use pyo3::prelude::*;
 
 /// Grades a guess against an answer, returning a WordleHint

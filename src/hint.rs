@@ -1,7 +1,6 @@
+use crate::common::WORD_LENGTH;
 use pyo3::prelude::*;
 use crate::utils::py_print;
-
-pub const WORD_LENGTH: usize = 5;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HintType {

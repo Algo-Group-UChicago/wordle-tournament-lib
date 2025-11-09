@@ -1,4 +1,4 @@
-use crate::hint::WORD_LENGTH;
+use crate::common::WORD_LENGTH;
 use std::collections::HashSet;
 use std::sync::OnceLock;
 
