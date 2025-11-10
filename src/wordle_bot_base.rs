@@ -158,7 +158,6 @@ impl UChicagoWordleBotBase {
         let py = slf.py();
         let mut attempts = vec![];
         for _ in 0..10 {
-            // Fill with dummy WordleHint object (all-absent except last letter present for "store")
             let hint_list = PyList::empty(py);
             hint_list.append(Py::new(
                 py,
@@ -176,7 +175,6 @@ impl UChicagoWordleBotBase {
             let guess: String = slf.call_method1("guess", (hint_list,))?.extract()?;
             attempts.push(guess);
         }
-        // Check if all attempts are the same (deterministic behavior)
         if attempts.iter().any(|g| g != &attempts[0]) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
                 "We like determinism! But your guess() method is not deterministic. \
