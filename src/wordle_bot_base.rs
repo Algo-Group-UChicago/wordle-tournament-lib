@@ -3,7 +3,7 @@ use crate::grade::grade_guess;
 use crate::hint::{HintType, WordleHint};
 use pyo3::exceptions::PyNotImplementedError;
 use pyo3::prelude::*;
-use pyo3::types::PyList;
+use pyo3::types::{PyList, PyModule};
 use pyo3::Bound;
 
 const NUM_TARGET_WORDS: usize = 1000;
@@ -156,7 +156,7 @@ impl UChicagoWordleBotBase {
 impl UChicagoWordleBotBase {
     /// Helper function to call Python's print function for proper Jupyter support
     fn py_print(py: Python, msg: &str) -> PyResult<()> {
-        let builtins = py.import_bound("builtins")?;
+        let builtins = PyModule::import(py, "builtins")?;
         let print = builtins.getattr("print")?;
         print.call1((msg,))?;
         Ok(())
