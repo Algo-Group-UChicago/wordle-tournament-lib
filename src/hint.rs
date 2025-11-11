@@ -78,7 +78,7 @@ impl WordleHint {
         self.hints.iter().map(|h| h.to_char()).collect()
     }
 
-    pub fn visualize_hint(&self) -> PyResult<()> {
+    pub fn visualize_hint(&self, py: Python) -> PyResult<()> {
         let mut letters = Vec::new();
         let mut squares = Vec::new();
 
@@ -92,7 +92,8 @@ impl WordleHint {
         }
 
         let output = format!("{}\n{}", letters.join(" "), squares.join(" "));
-        println!("{}", output);
+        Self::py_print(py, &output)?;
+        
         Ok(())
     }
 
@@ -111,6 +112,14 @@ impl WordleHint {
 }
 
 impl WordleHint {
+    /// Helper function to call Python's print function for proper Jupyter support
+    fn py_print(py: Python, msg: &str) -> PyResult<()> {
+        let builtins = py.import_bound("builtins")?;
+        let print = builtins.getattr("print")?;
+        print.call1((msg,))?;
+        Ok(())
+    }
+
     pub fn new(word: String, hints: [HintType; WORD_LENGTH]) -> Self {
         WordleHint { word, hints }
     }
