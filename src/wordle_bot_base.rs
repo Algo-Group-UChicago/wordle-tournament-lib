@@ -1,6 +1,6 @@
 use crate::corpus::{get_grading_answer_key, is_valid_word};
 use crate::grade::grade_guess;
-use crate::hint::WordleHint;
+use crate::hint::{HintType, WordleHint};
 use pyo3::exceptions::PyNotImplementedError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -63,6 +63,9 @@ impl UChicagoWordleBotBase {
     pub fn evaluate(slf: Bound<'_, Self>, grade_local: bool) -> PyResult<f64> {
         let py = slf.py();
         let team_id: &str = &slf.borrow().team_id;
+
+        // check for non-deterministic guess() behavior
+        Self::check_deterministic_behavior(&slf)?;
 
         // Each element of this vector is a guess history per target word that we grow via calling
         //   user's guess() method and sending guesses to backend to recieve hints.
@@ -149,6 +152,38 @@ impl UChicagoWordleBotBase {
 }
 
 impl UChicagoWordleBotBase {
+    /// Check for non-deterministic guess() behavior by calling guess() multiple times
+    /// with the same hint list and verifying all results are identical
+    fn check_deterministic_behavior(slf: &Bound<'_, Self>) -> PyResult<()> {
+        let py = slf.py();
+        let mut attempts = vec![];
+        for _ in 0..10 {
+            let hint_list = PyList::empty(py);
+            hint_list.append(Py::new(
+                py,
+                WordleHint::new(
+                    "store".to_string(),
+                    [
+                        HintType::Absent,
+                        HintType::Absent,
+                        HintType::Absent,
+                        HintType::Absent,
+                        HintType::Present,
+                    ],
+                ),
+            )?)?;
+            let guess: String = slf.call_method1("guess", (hint_list,))?.extract()?;
+            attempts.push(guess);
+        }
+        if attempts.iter().any(|g| g != &attempts[0]) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "We like determinism! But your guess() method is not deterministic. \
+                 Please make it return the same guess for a given unique hint list."
+            )));
+        }
+        Ok(())
+    }
+
     /// Send start signal to server to start tournament evaluation - details to come
     fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
         // This will probably start some kind of timer
