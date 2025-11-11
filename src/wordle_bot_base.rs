@@ -69,6 +69,9 @@ impl UChicagoWordleBotBase {
         // check for non-deterministic guess() behavior
         Self::check_deterministic_behavior(&slf)?;
 
+        // check for non-deterministic guess() behavior
+        Self::check_deterministic_behavior(&slf)?;
+
         // Each element of this vector is a guess history per target word that we grow via calling
         //   user's guess() method and sending guesses to backend to recieve hints.
         let hint_map: Vec<Bound<PyList>> =
