@@ -1,4 +1,5 @@
-use crate::common::{API_GUESSES_ENDPOINT, DUMMY_GUESS, MAX_GUESSES, NUM_TARGET_WORDS, WORD_LENGTH};
+use crate::api_client;
+use crate::common::{DUMMY_GUESS, MAX_GUESSES, NUM_TARGET_WORDS};
 use crate::corpus::{get_grading_answer_key, is_valid_word};
 use crate::grade::grade_guess;
 use crate::hint::{HintType, WordleHint};
@@ -7,9 +8,6 @@ use pyo3::exceptions::PyNotImplementedError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use pyo3::Bound;
-use reqwest::blocking::Client;
-use serde::{Deserialize, Serialize};
-
 
 #[pyclass(subclass)]
 pub struct UChicagoWordleBotBase {
@@ -151,20 +149,7 @@ impl UChicagoWordleBotBase {
         Err(PyNotImplementedError::new_err(
             "Subclass must implement the guess() method",
         ))
-    }   
-}
-
-
-// move these into a separate file?
-#[derive(Serialize)]
-struct GuessRequest {
-    team_id: String,
-    guesses: Vec<String>,
-}
-
-#[derive(Deserialize)]
-struct GuessResponse {
-    hints: Vec<String>,
+    }
 }
 
 impl UChicagoWordleBotBase {
@@ -201,11 +186,8 @@ impl UChicagoWordleBotBase {
     }
 
     /// Send start signal to server to start tournament evaluation - details to come
-    fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
-        // This will probably start some kind of timer
-        println!("Sending mock start signal to server");
-        //todo!("Implement sending start signal to server")
-        Ok(())
+    fn send_start_signal_to_server(&self, team_id: &str) -> Result<(), PyErr> {
+        api_client::send_start_signal(team_id)
     }
 
     /// Submit a round of guesses to server and return the corresponding hints based on answer key
@@ -214,48 +196,7 @@ impl UChicagoWordleBotBase {
         team_id: &str,
         guesses: &[String],
     ) -> Result<Vec<WordleHint>, PyErr> {
-        let client = Client::new();
-
-        let request_body = GuessRequest {
-            team_id: team_id.to_string(),
-            guesses: guesses.to_vec(),
-        };
-
-        let response = client
-            .post(API_GUESSES_ENDPOINT)
-            .json(&request_body)
-            .send()
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                "Failed to send request to server: {}", e
-            )))?;
-
-        if !response.status().is_success() {
-            let status = response.status();
-            let error_body = response.text().unwrap_or_else(|_| "Unable to read error message".to_string());
-            return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                "Server returned error status {}: {}",
-                status,
-                error_body
-            )));
-        }
-
-        let guess_response: GuessResponse = response.json().map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                "Failed to parse server response: {}",
-                e
-            ))
-        })?;
-
-        guesses.iter()
-            .zip(guess_response.hints.iter())
-            .map(|(word, hint_str)| {
-                if word == DUMMY_GUESS {
-                    Ok(WordleHint::new_all_correct("-".repeat(WORD_LENGTH)))
-                } else {
-                    WordleHint::new_hint(word.clone(), hint_str.clone())
-                }
-            })
-            .collect::<Result<Vec<WordleHint>, PyErr>>()
+        api_client::submit_guesses(team_id, guesses)
     }
 
     /// Grade a round of guesses locally and return hints
@@ -276,12 +217,8 @@ impl UChicagoWordleBotBase {
     }
 
     /// Send end signal to server to end tournament evaluation and return score - details to come
-    fn send_end_signal_to_server(&self, _team_id: &str) -> Result<f64, PyErr> {
-        // This will probably end some kind of timer, record the user's final score, shuffle the user's answer key for the next run etc.
-        println!("Sending mock end signal to server");
-        // todo!("Implement sending end signal to server")
-        // Should return the avg number of guesses
-        Ok(0.0)
+    fn send_end_signal_to_server(&self, team_id: &str) -> Result<f64, PyErr> {
+        api_client::send_end_signal(team_id)
     }
 
     /// Calculate the average number of guesses it took to guess all the words based on hint map (diff from server metric)
