@@ -5,6 +5,9 @@ on:
     types: [published]
   workflow_dispatch:  # Allows manual trigger from any branch
 
+permissions:
+  contents: write  # Allows uploading files to releases
+
 jobs:
   build-wheels:
     name: Build wheels on ${{ matrix.os }}
