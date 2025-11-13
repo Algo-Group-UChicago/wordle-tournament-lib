@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use pyo3::types::PyModule;
+use crate::utils::py_print;
 
 pub const WORD_LENGTH: usize = 5;
 
@@ -93,7 +93,7 @@ impl WordleHint {
         }
 
         let output = format!("{}\n{}", letters.join(" "), squares.join(" "));
-        Self::py_print(py, &output)?;
+        py_print(py, &output)?;
         
         Ok(())
     }
@@ -113,14 +113,6 @@ impl WordleHint {
 }
 
 impl WordleHint {
-    /// Helper function to call Python's print function for proper Jupyter support
-    fn py_print(py: Python, msg: &str) -> PyResult<()> {
-        let builtins = PyModule::import(py, "builtins")?;
-        let print = builtins.getattr("print")?;
-        print.call1((msg,))?;
-        Ok(())
-    }
-
     pub fn new(word: String, hints: [HintType; WORD_LENGTH]) -> Self {
         WordleHint { word, hints }
     }
