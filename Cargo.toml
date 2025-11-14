@@ -2,6 +2,7 @@
 name = "wordle-tournament-lib"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 [lib]
 name = "wordle_tournament_lib"
