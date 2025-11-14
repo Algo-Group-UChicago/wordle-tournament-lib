@@ -25,12 +25,12 @@ impl UChicagoWordleBotBase {
     /// Python exposed method to grade user's guess() function on a single word
     pub fn evaluate_on_word(slf: Bound<'_, Self>, answer: String, logging: bool) -> PyResult<i64> {
         let py = slf.py();
-        
+
         if logging {
             py_print(py, &format!("Evaluating bot on answer: {}", answer))?;
             py_print(py, "----------------------------------------------------")?;
         }
-        
+
         let hint_list = PyList::empty(py);
         let mut guesses = vec![];
 
@@ -127,16 +127,25 @@ impl UChicagoWordleBotBase {
                 py_print(py, &format!("Team {} local eval completed.", team_id))?;
                 py_print(
                     py,
-                    &format!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses)
+                    &format!(
+                        "Average number of guesses (unweighted) = {:.2}",
+                        avg_num_guesses
+                    ),
                 )?;
             }
             false => {
-                py_print(py, &format!("Ending team {} evaluation (remote grading)...", team_id))?;
+                py_print(
+                    py,
+                    &format!("Ending team {} evaluation (remote grading)...", team_id),
+                )?;
                 let score = slf.borrow().send_end_signal_to_server(team_id)?;
                 py_print(py, &format!("Team {} remote eval completed.", team_id))?;
                 py_print(
                     py,
-                    &format!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses)
+                    &format!(
+                        "Average number of guesses (unweighted) = {:.2}",
+                        avg_num_guesses
+                    ),
                 )?;
                 py_print(py, &format!("Weighted server score = {:.2}", score))?;
             }

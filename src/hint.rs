@@ -1,6 +1,6 @@
 use crate::common::WORD_LENGTH;
-use pyo3::prelude::*;
 use crate::utils::py_print;
+use pyo3::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HintType {
@@ -93,7 +93,7 @@ impl WordleHint {
 
         let output = format!("{}\n{}", letters.join(" "), squares.join(" "));
         py_print(py, &output)?;
-        
+
         Ok(())
     }
 
