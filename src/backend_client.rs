@@ -69,7 +69,6 @@ pub fn submit_guesses(team_id: &str, guesses: &[String]) -> Result<Vec<WordleHin
 
 /// Send start signal to server to start tournament evaluation
 pub fn send_start_signal(team_id: &str) -> Result<(), PyErr> {
-    // This will probably start some kind of timer
     println!("Sending mock start signal to server for team {}", team_id);
     // TODO: Implement actual API call
     Ok(())
@@ -77,8 +76,6 @@ pub fn send_start_signal(team_id: &str) -> Result<(), PyErr> {
 
 /// Send end signal to server to end tournament evaluation and return score
 pub fn send_end_signal(team_id: &str) -> Result<f64, PyErr> {
-    // This will probably end some kind of timer, record the user's final score,
-    // shuffle the user's answer key for the next run etc.
     println!("Sending mock end signal to server for team {}", team_id);
     // TODO: Implement actual API call
     // Should return the weighted server score

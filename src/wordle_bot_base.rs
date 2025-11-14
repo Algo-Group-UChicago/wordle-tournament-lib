@@ -1,4 +1,4 @@
-use crate::api_client;
+use crate::backend_client;
 use crate::common::{DUMMY_GUESS, MAX_GUESSES, NUM_TARGET_WORDS};
 use crate::corpus::{get_grading_answer_key, is_valid_word};
 use crate::grade::grade_guess;
@@ -187,7 +187,7 @@ impl UChicagoWordleBotBase {
 
     /// Send start signal to server to start tournament evaluation - details to come
     fn send_start_signal_to_server(&self, team_id: &str) -> Result<(), PyErr> {
-        api_client::send_start_signal(team_id)
+        backend_client::send_start_signal(team_id)
     }
 
     /// Submit a round of guesses to server and return the corresponding hints based on answer key
@@ -196,7 +196,7 @@ impl UChicagoWordleBotBase {
         team_id: &str,
         guesses: &[String],
     ) -> Result<Vec<WordleHint>, PyErr> {
-        api_client::submit_guesses(team_id, guesses)
+        backend_client::submit_guesses(team_id, guesses)
     }
 
     /// Grade a round of guesses locally and return hints
@@ -218,7 +218,7 @@ impl UChicagoWordleBotBase {
 
     /// Send end signal to server to end tournament evaluation and return score - details to come
     fn send_end_signal_to_server(&self, team_id: &str) -> Result<f64, PyErr> {
-        api_client::send_end_signal(team_id)
+        backend_client::send_end_signal(team_id)
     }
 
     /// Calculate the average number of guesses it took to guess all the words based on hint map (diff from server metric)
