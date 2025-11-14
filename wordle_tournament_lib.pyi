@@ -1,7 +1,7 @@
 """
 Wordle Tournament Library
 
-Library written in Rust for running aWordle tournament. Written by Kathir Meyyappan and Akash Piya."""
+Library written in Rust for running a Wordle tournament. Written by Kathir Meyyappan and Akash Piya."""
 
 from typing import List, Tuple
 

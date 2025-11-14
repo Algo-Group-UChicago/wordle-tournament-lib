@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 pub mod corpus;
 pub mod grade;
 pub mod hint;
+pub mod utils;
 mod wordle_bot_base;
 
 /// Python bindings for wordle-tournament-lib

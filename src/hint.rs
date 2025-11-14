@@ -1,4 +1,5 @@
 use pyo3::prelude::*;
+use crate::utils::py_print;
 
 pub const WORD_LENGTH: usize = 5;
 
@@ -78,7 +79,7 @@ impl WordleHint {
         self.hints.iter().map(|h| h.to_char()).collect()
     }
 
-    pub fn visualize_hint(&self) -> PyResult<()> {
+    pub fn visualize_hint(&self, py: Python) -> PyResult<()> {
         let mut letters = Vec::new();
         let mut squares = Vec::new();
 
@@ -92,7 +93,8 @@ impl WordleHint {
         }
 
         let output = format!("{}\n{}", letters.join(" "), squares.join(" "));
-        println!("{}", output);
+        py_print(py, &output)?;
+        
         Ok(())
     }
 

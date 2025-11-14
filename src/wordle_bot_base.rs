@@ -1,6 +1,7 @@
 use crate::corpus::{get_grading_answer_key, is_valid_word};
 use crate::grade::grade_guess;
 use crate::hint::{HintType, WordleHint};
+use crate::utils::py_print;
 use pyo3::exceptions::PyNotImplementedError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -25,11 +26,13 @@ impl UChicagoWordleBotBase {
 
     /// Python exposed method to grade user's guess() function on a single word
     pub fn evaluate_on_word(slf: Bound<'_, Self>, answer: String, logging: bool) -> PyResult<i64> {
-        if logging {
-            println!("Evaluating bot on answer: {}", answer);
-            println!("----------------------------------------------------");
-        }
         let py = slf.py();
+        
+        if logging {
+            py_print(py, &format!("Evaluating bot on answer: {}", answer))?;
+            py_print(py, "----------------------------------------------------")?;
+        }
+        
         let hint_list = PyList::empty(py);
         let mut guesses = vec![];
 
@@ -44,7 +47,7 @@ impl UChicagoWordleBotBase {
             guesses.push(guess.clone());
             let hint = grade_guess(&guess, &answer);
             if logging {
-                hint.visualize_hint()?;
+                hint.visualize_hint(py)?;
             }
             if hint.is_fully_correct() {
                 return Ok(num_guesses as i64);
@@ -74,10 +77,10 @@ impl UChicagoWordleBotBase {
 
         match grade_local {
             true => {
-                println!("Beginning evaluation (local grading)");
+                py_print(py, "Beginning evaluation (local grading)")?;
             }
             false => {
-                println!("Beginning evaluation (remote grading)");
+                py_print(py, "Beginning evaluation (remote grading)")?;
                 slf.borrow().send_start_signal_to_server(team_id)?;
             }
         }
@@ -123,21 +126,21 @@ impl UChicagoWordleBotBase {
         avg_num_guesses = Self::calculate_local_score(&hint_map)?;
         match grade_local {
             true => {
-                println!("Team {} local eval completed.", team_id);
-                println!(
-                    "Average number of guesses (unweighted) = {:.2}",
-                    avg_num_guesses
-                );
+                py_print(py, &format!("Team {} local eval completed.", team_id))?;
+                py_print(
+                    py,
+                    &format!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses)
+                )?;
             }
             false => {
-                println!("Ending team {} evaluation (remote grading)...", team_id);
+                py_print(py, &format!("Ending team {} evaluation (remote grading)...", team_id))?;
                 let score = slf.borrow().send_end_signal_to_server(team_id)?;
-                println!("Team {} remote eval completed.", team_id);
-                println!(
-                    "Average number of guesses (unweighted) = {:.2}",
-                    avg_num_guesses
-                );
-                println!("Weighted server score = {:.2}", score);
+                py_print(py, &format!("Team {} remote eval completed.", team_id))?;
+                py_print(
+                    py,
+                    &format!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses)
+                )?;
+                py_print(py, &format!("Weighted server score = {:.2}", score))?;
             }
         }
 
