@@ -5,7 +5,10 @@ fn main() {
     // Allows `cargo test --no-default-features` to run properly on mac os
     if env::var("CARGO_FEATURE_EXTENSION_MODULE").is_err() {
         let output = Command::new("python3")
-            .args(&["-c", "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"])
+            .args(&[
+                "-c",
+                "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))",
+            ])
             .output()
             .expect("Failed to execute python3");
 
