@@ -1,3 +1,5 @@
+use crate::backend_client;
+use crate::common::{DUMMY_GUESS, MAX_GUESSES, NUM_TARGET_WORDS};
 use crate::corpus::{get_grading_answer_key, is_valid_word};
 use crate::grade::grade_guess;
 use crate::hint::{HintType, WordleHint};
@@ -6,10 +8,6 @@ use pyo3::exceptions::PyNotImplementedError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use pyo3::Bound;
-
-const NUM_TARGET_WORDS: usize = 1000;
-const MAX_GUESSES: usize = 20;
-const DUMMY_GUESS: &str = "imagine guessing more than 5 letters";
 
 #[pyclass(subclass)]
 pub struct UChicagoWordleBotBase {
@@ -27,12 +25,12 @@ impl UChicagoWordleBotBase {
     /// Python exposed method to grade user's guess() function on a single word
     pub fn evaluate_on_word(slf: Bound<'_, Self>, answer: String, logging: bool) -> PyResult<i64> {
         let py = slf.py();
-        
+
         if logging {
             py_print(py, &format!("Evaluating bot on answer: {}", answer))?;
             py_print(py, "----------------------------------------------------")?;
         }
-        
+
         let hint_list = PyList::empty(py);
         let mut guesses = vec![];
 
@@ -129,16 +127,25 @@ impl UChicagoWordleBotBase {
                 py_print(py, &format!("Team {} local eval completed.", team_id))?;
                 py_print(
                     py,
-                    &format!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses)
+                    &format!(
+                        "Average number of guesses (unweighted) = {:.2}",
+                        avg_num_guesses
+                    ),
                 )?;
             }
             false => {
-                py_print(py, &format!("Ending team {} evaluation (remote grading)...", team_id))?;
+                py_print(
+                    py,
+                    &format!("Ending team {} evaluation (remote grading)...", team_id),
+                )?;
                 let score = slf.borrow().send_end_signal_to_server(team_id)?;
                 py_print(py, &format!("Team {} remote eval completed.", team_id))?;
                 py_print(
                     py,
-                    &format!("Average number of guesses (unweighted) = {:.2}", avg_num_guesses)
+                    &format!(
+                        "Average number of guesses (unweighted) = {:.2}",
+                        avg_num_guesses
+                    ),
                 )?;
                 py_print(py, &format!("Weighted server score = {:.2}", score))?;
             }
@@ -188,19 +195,17 @@ impl UChicagoWordleBotBase {
     }
 
     /// Send start signal to server to start tournament evaluation - details to come
-    fn send_start_signal_to_server(&self, _team_id: &str) -> Result<(), PyErr> {
-        // This will probably start some kind of timer
-        todo!("Implement sending start signal to server")
+    fn send_start_signal_to_server(&self, team_id: &str) -> Result<(), PyErr> {
+        backend_client::send_start_signal(team_id)
     }
 
-    /// Submit a round of guesses to server and return the corresponding hints based on answer key - details to come
+    /// Submit a round of guesses to server and return the corresponding hints based on answer key
     fn submit_guesses_to_server(
         &self,
-        _team_id: &str,
-        _guesses: &[String],
+        team_id: &str,
+        guesses: &[String],
     ) -> Result<Vec<WordleHint>, PyErr> {
-        // For an array of guesses, this send to server and returns corresponding hints based on the answer key (stored + tracked unqiuely for each user)
-        todo!("Implement guess sending logic")
+        backend_client::submit_guesses(team_id, guesses)
     }
 
     /// Grade a round of guesses locally and return hints
@@ -221,11 +226,8 @@ impl UChicagoWordleBotBase {
     }
 
     /// Send end signal to server to end tournament evaluation and return score - details to come
-    fn send_end_signal_to_server(&self, _team_id: &str) -> Result<f64, PyErr> {
-        // This will probably end some kind of timer, record the user's final score, shuffle the user's answer key for the next run etc.
-        todo!("Implement sending end signal to server")
-        // Should return the avg number of guesses
-        // Ok(0.0)
+    fn send_end_signal_to_server(&self, team_id: &str) -> Result<f64, PyErr> {
+        backend_client::send_end_signal(team_id)
     }
 
     /// Calculate the average number of guesses it took to guess all the words based on hint map (diff from server metric)

@@ -8,4 +8,3 @@ pub fn py_print(py: Python, msg: &str) -> PyResult<()> {
     print.call1((msg,))?;
     Ok(())
 }
-

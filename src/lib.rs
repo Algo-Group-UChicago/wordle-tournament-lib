@@ -1,5 +1,7 @@
 use pyo3::prelude::*;
 
+pub mod backend_client;
+pub mod common;
 pub mod corpus;
 pub mod grade;
 pub mod hint;
