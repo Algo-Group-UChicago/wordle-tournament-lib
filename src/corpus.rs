@@ -60,7 +60,6 @@ mod tests {
 
     #[test]
     fn test_case_sensitive() {
-        // Assuming corpus is lowercase
         assert!(is_valid_word("crane"));
         assert!(!is_valid_word("CRANE"));
     }
