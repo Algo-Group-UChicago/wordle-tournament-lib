@@ -2,7 +2,7 @@ use pyo3::PyErr;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::common::{API_GUESSES_ENDPOINT, DUMMY_GUESS, WORD_LENGTH};
+use crate::common::API_GUESSES_ENDPOINT;
 use crate::hint::WordleHint;
 
 #[derive(Serialize)]
@@ -58,8 +58,8 @@ pub fn submit_guesses(team_id: &str, guesses: &[String]) -> Result<Vec<WordleHin
         .iter()
         .zip(guess_response.hints.iter())
         .map(|(word, hint_str)| {
-            if word == DUMMY_GUESS {
-                Ok(WordleHint::new_all_correct("-".repeat(WORD_LENGTH)))
+            if hint_str == "OOOOO" {
+                Ok(WordleHint::new_all_correct(word.clone()))
             } else {
                 WordleHint::new_hint(word.clone(), hint_str.clone())
             }
