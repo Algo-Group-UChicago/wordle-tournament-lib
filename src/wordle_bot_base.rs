@@ -120,8 +120,7 @@ impl UChicagoWordleBotBase {
         }
 
         // Calculate final score
-        let avg_num_guesses: f64;
-        avg_num_guesses = Self::calculate_local_score(&hint_map)?;
+        let avg_num_guesses = Self::calculate_local_score(&hint_map)?;
         match grade_local {
             true => {
                 py_print(py, &format!("Team {} local eval completed.", team_id))?;
@@ -186,10 +185,10 @@ impl UChicagoWordleBotBase {
             attempts.push(guess);
         }
         if attempts.iter().any(|g| g != &attempts[0]) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
                 "We like determinism! But your guess() method is not deterministic. \
-                 Please make it return the same guess for a given unique hint list."
-            )));
+                 Please make it return the same guess for a given unique hint list.",
+            ));
         }
         Ok(())
     }
@@ -214,12 +213,11 @@ impl UChicagoWordleBotBase {
 
         let mut hints = vec![];
         for (i, guess) in guesses.iter().enumerate() {
-            let hint;
-            if guess == DUMMY_GUESS {
-                hint = WordleHint::new_all_correct(guess.clone());
+            let hint = if guess == DUMMY_GUESS {
+                WordleHint::new_all_correct(guess.clone())
             } else {
-                hint = grade_guess(guess, answer_key[i]);
-            }
+                grade_guess(guess, answer_key[i])
+            };
             hints.push(hint);
         }
         Ok(hints)
