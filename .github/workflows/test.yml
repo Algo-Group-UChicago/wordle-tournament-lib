@@ -22,6 +22,13 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
+          components: rustfmt, clippy
+      
+      - name: Check formatting
+        run: cargo fmt --check
+      
+      - name: Run clippy
+        run: cargo clippy --no-default-features -- -D warnings
       
       - name: Run tests
         run: cargo test --no-default-features
