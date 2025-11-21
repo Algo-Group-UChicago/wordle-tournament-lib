@@ -61,4 +61,3 @@ jobs:
       
       - name: Run tests
         run: cargo test --no-default-features
-
