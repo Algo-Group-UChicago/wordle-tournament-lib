@@ -2,10 +2,10 @@ use std::env;
 use std::process::Command;
 
 fn main() {
-    // Allows `cargo test --no-default-features` to run properly on mac os
+    // Allows `cargo test --no-default-features` to run properly on mac os... for Akash
     if env::var("CARGO_FEATURE_EXTENSION_MODULE").is_err() {
         let output = Command::new("python3")
-            .args(&[
+            .args([
                 "-c",
                 "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))",
             ])
