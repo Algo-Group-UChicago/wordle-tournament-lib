@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 use crate::common::{API_END_PATH, API_GUESSES_PATH, API_START_PATH, BACKEND_API};
 use crate::hint::WordleHint;
 
-use super::types::{EndRequest, EndResponse, GuessRequest, GuessResponse, StartRequest, StartResponse};
+use super::types::{
+    EndRequest, EndResponse, GuessRequest, GuessResponse, StartRequest, StartResponse,
+};
 
 /// Generic helper to make POST requests to the backend API
 fn post_request<Req: Serialize, Resp: for<'de> Deserialize<'de>>(
@@ -14,7 +16,7 @@ fn post_request<Req: Serialize, Resp: for<'de> Deserialize<'de>>(
 ) -> Result<Resp, PyErr> {
     let client = Client::new();
     let endpoint = format!("{}{}", BACKEND_API, endpoint_path);
-    
+
     let response = client
         .post(&endpoint)
         .json(&request_body)
@@ -57,7 +59,11 @@ pub fn send_start(team_id: &str) -> Result<String, PyErr> {
 }
 
 /// Send a round of guesses to server and return the corresponding hints based on answer key
-pub fn send_guesses(team_id: &str, run_id: &str, guesses: &[String]) -> Result<Vec<WordleHint>, PyErr> {
+pub fn send_guesses(
+    team_id: &str,
+    run_id: &str,
+    guesses: &[String],
+) -> Result<Vec<WordleHint>, PyErr> {
     let response: GuessResponse = post_request(
         API_GUESSES_PATH,
         GuessRequest {
@@ -66,7 +72,7 @@ pub fn send_guesses(team_id: &str, run_id: &str, guesses: &[String]) -> Result<V
             guesses: guesses.to_vec(),
         },
     )?;
-    
+
     guesses
         .iter()
         .zip(response.hints.iter())

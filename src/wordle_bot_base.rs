@@ -108,7 +108,9 @@ impl UChicagoWordleBotBase {
             // Grade new round of guesses
             let new_hints = match grade_local {
                 true => slf.borrow().grade_guesses_locally(&guesses)?,
-                false => slf.borrow().submit_guesses_to_server(team_id, run_id, &guesses)?,
+                false => slf
+                    .borrow()
+                    .submit_guesses_to_server(team_id, run_id, &guesses)?,
             };
 
             // Update hint_map with the new hints
