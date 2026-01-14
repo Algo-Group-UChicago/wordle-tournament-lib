@@ -73,12 +73,15 @@ impl UChicagoWordleBotBase {
         let hint_map: Vec<Bound<PyList>> =
             (0..NUM_TARGET_WORDS).map(|_| PyList::empty(py)).collect();
 
-        let run_id_string = if grade_local {
-            py_print(py, "Beginning evaluation (local grading)")?;
-            String::new() // Dummy value, won't be used
-        } else {
-            py_print(py, "Beginning evaluation (remote grading)")?;
-            slf.borrow().send_start_signal_to_server(team_id)?
+        let run_id_string = match grade_local {
+            true => {
+                py_print(py, "Beginning evaluation (local grading)")?;
+                String::new() // Dummy value, won't be used    
+            }
+            false => {
+                py_print(py, "Beginning evaluation (remote grading)")?;
+                slf.borrow().send_start_signal_to_server(team_id)?    
+            }
         };
         let run_id: &str = &run_id_string;
 
@@ -122,30 +125,33 @@ impl UChicagoWordleBotBase {
 
         // Calculate final score
         let avg_num_guesses = Self::calculate_local_score(&hint_map)?;
-        if grade_local {
-            py_print(py, &format!("Team {} local eval completed.", team_id))?;
-            py_print(
-                py,
-                &format!(
-                    "Average number of guesses (unweighted) = {:.2}",
-                    avg_num_guesses
-                ),
-            )?;
-        } else {
-            py_print(
-                py,
-                &format!("Ending team {} evaluation (remote grading)...", team_id),
-            )?;
-            let score = slf.borrow().send_end_signal_to_server(team_id, run_id)?;
-            py_print(py, &format!("Team {} remote eval completed.", team_id))?;
-            py_print(
-                py,
-                &format!(
-                    "Average number of guesses (unweighted) = {:.2}",
-                    avg_num_guesses
-                ),
-            )?;
-            py_print(py, &format!("Weighted server score = {:.2}", score))?;
+        match grade_local {
+            true => {
+                py_print(py, &format!("Team {} local eval completed.", team_id))?;
+                py_print(
+                    py,
+                    &format!(
+                        "Average number of guesses (unweighted) = {:.2}",
+                        avg_num_guesses
+                    ),
+                )?;
+            }
+            false => {
+                py_print(
+                    py,
+                    &format!("Ending team {} evaluation (remote grading)...", team_id),
+                )?;
+                let score = slf.borrow().send_end_signal_to_server(team_id, run_id)?;
+                py_print(py, &format!("Team {} remote eval completed.", team_id))?;
+                py_print(
+                    py,
+                    &format!(
+                        "Average number of guesses (unweighted) = {:.2}",
+                        avg_num_guesses
+                    ),
+                )?;
+                py_print(py, &format!("Weighted server score = {:.2}", score))?;
+            }
         }
 
         Ok(avg_num_guesses)
