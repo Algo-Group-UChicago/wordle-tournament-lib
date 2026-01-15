@@ -4,4 +4,9 @@ pub const MAX_GUESSES: usize = 20;
 pub const DUMMY_GUESS: &str = "imagine guessing more than 5 letters";
 
 // Eventually this will be injected at compile time
-pub const API_GUESSES_ENDPOINT: &str = "http://localhost:8080/api/guesses";
+pub const BACKEND_API: &str = "http://localhost:8080";
+
+// API endpoint paths
+pub const API_GUESSES_PATH: &str = "/api/guesses";
+pub const API_START_PATH: &str = "/api/start";
+pub const API_END_PATH: &str = "/api/end";
