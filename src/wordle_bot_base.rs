@@ -76,11 +76,11 @@ impl UChicagoWordleBotBase {
         let run_id_string = match grade_local {
             true => {
                 py_print(py, "Beginning evaluation (local grading)")?;
-                String::new() // Dummy value, won't be used    
+                String::new() // Dummy value, won't be used
             }
             false => {
                 py_print(py, "Beginning evaluation (remote grading)")?;
-                slf.borrow().send_start_signal_to_server(team_id)?    
+                slf.borrow().send_start_signal_to_server(team_id)?
             }
         };
         let run_id: &str = &run_id_string;
