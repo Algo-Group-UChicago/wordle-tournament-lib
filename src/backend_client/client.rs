@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::{API_END_PATH, API_GUESSES_PATH, API_START_PATH, BACKEND_API};
 use crate::hint::WordleHint;
+use crate::utils::py_print;
 
 use super::types::{
     EndRequest, EndResponse, GuessRequest, GuessResponse, StartRequest, StartResponse,
@@ -77,6 +78,9 @@ pub fn send_guesses(
         .iter()
         .zip(response.hints.iter())
         .map(|(word, hint_str)| {
+            // WordleHint::new_hint expects word to be len 5,
+            // but word is DUMMY_GUESS (not len 5) when hint_str is all correct
+            // so we need to handle this case separately
             if hint_str == "OOOOO" {
                 Ok(WordleHint::new_all_correct(word.clone()))
             } else {
