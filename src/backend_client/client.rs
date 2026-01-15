@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::{API_END_PATH, API_GUESSES_PATH, API_START_PATH, BACKEND_API};
 use crate::hint::WordleHint;
-use crate::utils::py_print;
 
 use super::types::{
     EndRequest, EndResponse, GuessRequest, GuessResponse, StartRequest, StartResponse,
